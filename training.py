@@ -1,6 +1,8 @@
 import numpy as np
 import re
+import json
 
+config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 lines = open('movie_lines.txt', encoding='utf-8', errors='ignore').read().split('\n')
 conversations = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
@@ -67,15 +69,15 @@ def clean_text(text):
     text = re.sub(r"'cept", "except", text)
     text = re.sub(r"'fore", "therefore", text)
     text = re.sub(r"y'", "you ", text)
-    text = re.sub(r"'n", " than", text)
-    text = re.sub(r"'11", " will", text)
+    text = re.sub(r"\'n", " than", text)
+    text = re.sub(r"\'11", " will", text)
     text = re.sub(r"an'", "and", text)
     text = re.sub(r"y'", "you ", text)
     text = re.sub(r"som'b'y", "somebody", text)
     text = re.sub(r"what'the", "what the", text)
     text = re.sub(r"s'it", "shit", text)
     text = re.sub(r"'nough", "enough", text)
-    text = re.sub(r"'1l", " will", text)
+    text = re.sub(r"\'1l", " will", text)
     text = re.sub(r"ma'am", "madam", text)
     text = re.sub(r"ethic'ly", "ethically", text)
     text = re.sub(r"y'wanna", "you want to", text)
@@ -89,8 +91,8 @@ def clean_text(text):
     text = re.sub(r"o'", "of", text)
     text = re.sub(r"'s", "", text)
     text = re.sub(r"some'b'y", "somebody", text)
-    text = re.sub(r"'er", " her", text)
-    text = re.sub(r"'", " ", text)
+    text = re.sub(r"\'er", " her", text)
+    text = re.sub(r"\'", " ", text)
     text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text)
     text = re.sub('\s+', ' ', text)
     text = text.strip()
@@ -136,14 +138,14 @@ for answer in clean_answers:
         else:
             word2count[word] += 1
 
-threshold_questions = 15
+threshold_questions = config["threshold_questions"]
 questionswords2int = {}
 word_number = 0
 for word, count in word2count.items():
     if count >= threshold_questions:
         questionswords2int[word] = word_number
         word_number += 1
-threshold_answers = 15
+threshold_answers = config["threshold_answers"]
 answerswords2int = {}
 word_number = 0
 for word, count in word2count.items():
@@ -158,6 +160,9 @@ for token in tokens:
     answerswords2int[token] = len(answerswords2int) + 1
 
 answersints2word = {w_i: w for w, w_i in answerswords2int.items()}
+
+open(config["questions"], "w", encoding='utf-8', errors='ignore').write(json.dumps(questionswords2int))
+open(config["answers"], "w", encoding='utf-8', errors='ignore').write(json.dumps(answersints2word))
 
 for i in range(len(clean_answers)):
     clean_answers[i] += ' <EOS>'
