@@ -1,8 +1,7 @@
 {
   "name": "Email extraction tool",
   "description": "Tool to extract tasks from email text",
-  "questions": "questions.json",
-  "answers": "answers.json",
-  "threshold_questions": 15,
-  "threshold_answers": 15
+  "MAX_VOCABULARY": 20000,
+  "glove_path": "glove/",
+  "glove_dimension": 50
 }
