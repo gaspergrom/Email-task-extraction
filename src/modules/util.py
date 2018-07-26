@@ -3,6 +3,8 @@ import json
 import numpy as np
 from keras.preprocessing.text import Tokenizer
 
+import matplotlib.pyplot as plt
+
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
 MAX_VOCABULARY = config['MAX_VOCABULARY']
@@ -23,7 +25,7 @@ def create_embedding_matrix(word2idx, word2vec, num_words, EMBEDDING_DIM):
     embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
 
     for word, i in word2idx.items():
-        if i < MAX_VOCABULARY:
+        if i < num_words:
             embedding_vector = word2vec.get(word)
 
             # other vectors will be all zeros
@@ -45,6 +47,19 @@ def tokenize(texts, max_vocabulary):
     sequences = tokenizer.texts_to_sequences(texts)
 
     return sequences, tokenizer.word_index
+
+def visualize_data(r):
+    # visualise
+    plt.plot(r.history['loss'], label='loss')
+    plt.plot(r.history['val_loss'], label='val_loss')
+    plt.legend()
+    plt.show()
+
+    # accuracy
+    plt.plot(r.history['acc'], label='acc')
+    plt.plot(r.history['val_acc'], label='val_acc')
+    plt.legend()
+    plt.show()
 
 def clean_text(text):
     text = text.lower()
