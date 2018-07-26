@@ -29,6 +29,8 @@ def create_embedding_matrix(word2idx, word2vec, num_words, EMBEDDING_DIM):
             # other vectors will be all zeros
             if embedding_vector is not None:
                 embedding_matrix[i] = embedding_vector
+        else:
+            print("WARNING: omitting i: {0}, word: {1}".format(i, word))
 
     return embedding_matrix
 
