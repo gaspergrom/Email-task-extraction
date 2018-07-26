@@ -23,14 +23,12 @@ def create_embedding_matrix(word2idx, word2vec, num_words, EMBEDDING_DIM):
     embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
 
     for word, i in word2idx.items():
-        if i < MAX_VOCABULARY and i < 6937:
+        if i < num_words:
             embedding_vector = word2vec.get(word)
 
             # other vectors will be all zeros
             if embedding_vector is not None:
                 embedding_matrix[i] = embedding_vector
-        else:
-            print("WARNING: omitting i: {0}, word: {1}".format(i, word))
 
     return embedding_matrix
 
