@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import modules.util as util
 from keras import Input, Model
-from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D
+from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Conv2D, \
+    GlobalMaxPooling2D, MaxPooling2D, Reshape, MaxPool2D, Concatenate, Flatten, Dropout
 from keras_preprocessing.sequence import pad_sequences
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
@@ -12,8 +13,8 @@ sentences_training = open(r'../datasets/sentences_training.txt', encoding='utf-8
 sentences_test = open(r'../datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
 MAX_SEQUENCE_LENGTH = 30
-BATCH_SIZE = 128
-EPOCH = 10
+BATCH_SIZE = 64
+EPOCH = 100
 VALIDATION_SPLIT = 0.2
 
 ## split dataset sentences into two arrays (inputs & outputs)
@@ -59,30 +60,46 @@ targets = np.array(action_into_int)
 
 ## pass the dataset through the tokenizer
 sequences, word_index = util.tokenize(clean_sentences, config['MAX_VOCABULARY'])
-word2vec = util.get_glove_word2vec(config['glove_path'], config['glove_dimension'])
+EMBEDDING_DIMENSION = config['glove_dimension']
+word2vec = util.get_glove_word2vec(config['glove_path'], EMBEDDING_DIMENSION)
 num_words = len(word_index)
-embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, config['glove_dimension'])
+embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, EMBEDDING_DIMENSION)
 
 data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
-# trainable is false to preserve the embedding weights
-embedding_layer = Embedding(
-    num_words,
-    config['glove_dimension'],
-    weights=[embedding_matrix],
+filter_sizes = [3, 4, 5]
+num_filters = 512
+drop = 0.5
+
+print("Creating Model...")
+input_ = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
+embedding = Embedding(
+    input_dim=num_words,
+    output_dim=EMBEDDING_DIMENSION,
     input_length=MAX_SEQUENCE_LENGTH,
-    trainable=False
-)
+    weights=[embedding_matrix],
+    trainable=False)(input_)
 
-# trains 1D convnet with global max pooling
-input_ = Input(shape=(MAX_SEQUENCE_LENGTH,))
-x = embedding_layer(input_)
-x = Conv1D(32, 3, activation='relu')(x)
-x = MaxPooling1D(3)(x)
-x = Conv1D(32, 3, activation='relu')(x)
+reshape = Reshape((MAX_SEQUENCE_LENGTH, EMBEDDING_DIMENSION, 1))(embedding)
 
-x = GlobalAveragePooling1D()(x)
-output = Dense(1, activation='sigmoid')(x)
+conv_0 = Conv2D(num_filters, kernel_size=(filter_sizes[0], EMBEDDING_DIMENSION), padding='valid',
+                kernel_initializer='normal',
+                activation='relu')(reshape)
+conv_1 = Conv2D(num_filters, kernel_size=(filter_sizes[1], EMBEDDING_DIMENSION), padding='valid',
+                kernel_initializer='normal',
+                activation='relu')(reshape)
+conv_2 = Conv2D(num_filters, kernel_size=(filter_sizes[2], EMBEDDING_DIMENSION), padding='valid',
+                kernel_initializer='normal',
+                activation='relu')(reshape)
+
+maxpool_0 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[0] + 1, 1), strides=(1, 1), padding='valid')(conv_0)
+maxpool_1 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[1] + 1, 1), strides=(1, 1), padding='valid')(conv_1)
+maxpool_2 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[2] + 1, 1), strides=(1, 1), padding='valid')(conv_2)
+
+concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1, maxpool_2])
+flatten = Flatten()(concatenated_tensor)
+dropout = Dropout(drop)(flatten)
+output = Dense(units=1, activation='sigmoid')(dropout)
 
 model = Model(input_, output)
 model.compile(
@@ -99,7 +116,6 @@ r = model.fit(
     epochs=EPOCH,
     validation_split=VALIDATION_SPLIT
 )
-
 
 # visualise
 plt.plot(r.history['loss'], label='loss')
