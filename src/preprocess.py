@@ -62,7 +62,9 @@ targets = np.array(action_into_int)
 sequences, word_index = util.tokenize(clean_sentences, config['MAX_VOCABULARY'])
 EMBEDDING_DIMENSION = config['glove_dimension']
 word2vec = util.get_glove_word2vec(config['glove_path'], EMBEDDING_DIMENSION)
-num_words = len(word_index)
+
+num_words = min(config['MAX_VOCABULARY'], len(word_index) + 1)
+
 embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, EMBEDDING_DIMENSION)
 
 data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
