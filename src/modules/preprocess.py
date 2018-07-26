@@ -6,14 +6,12 @@ import matplotlib.pyplot as plt
 from keras_preprocessing.sequence import pad_sequences
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
-sentences_training = open(r'datasets/sentences_training.txt', encoding='utf-8', errors='ignore').read().split('\n')
-sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
-def preprocess_data():
+def preprocess_data(data):
     ## split dataset sentences into two arrays (inputs & outputs)
     requires_action = []
     sentences = []
-    for sentence in sentences_training:
+    for sentence in data:
         split = sentence.split('\t')
         p1 = split[0]
         p2 = split[1]
