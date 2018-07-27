@@ -16,7 +16,7 @@ def mail_callback(nn, sentences):
 
     for i, prediction in enumerate(predictions):
         # if prediction == 1:
-            print("Got a task")
+            print("Got a task") # TODO: CHECK IF TASK!!
             # get entities for each task and create task objects
             # entities == dictionary (key, val)
             entities = ent.get_entities(sentences[i])
