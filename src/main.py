@@ -19,11 +19,11 @@ from keras.preprocessing.text import Tokenizer
 ## Loading config & datasets
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 sentences_training = open(r'datasets/sentences_training.txt', encoding='utf-8', errors='ignore').read().split('\n')
-sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
+# sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
 ## Preprocessing data
 num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
-_, _, test_data, test_targets = pp.preprocess_data(sentences_test)
+# _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
 
 ## Initializing the RNN
 fname = "{0}{1}".format(config['weights_path'], config['weights_file'])

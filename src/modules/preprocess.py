@@ -60,3 +60,8 @@ def preprocess_data(data):
     embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, config['glove_dimension'])
 
     return num_words, embedding_matrix, data, targets
+
+
+if __name__ == '__main__':
+    sentences_training = open(r'../../datasets/sentences_training.txt', encoding='utf-8', errors='ignore').read().split('\n')
+    preprocess_data(sentences_training)

@@ -29,21 +29,18 @@ class CNN:
 
         reshape = Reshape((MAX_SEQUENCE_LENGTH, EMBEDDING_DIMENSION, 1))(embedding)
 
-        conv_0 = Conv2D(num_filters, kernel_size=(filter_sizes[0], EMBEDDING_DIMENSION), padding='valid',
+        conv_0 = Conv2D(num_filters, kernel_size=(3, 3), padding='valid',
                         kernel_initializer='normal',
                         activation='relu')(reshape)
-        conv_1 = Conv2D(num_filters, kernel_size=(filter_sizes[1], EMBEDDING_DIMENSION), padding='valid',
-                        kernel_initializer='normal',
-                        activation='relu')(reshape)
-        conv_2 = Conv2D(num_filters, kernel_size=(filter_sizes[2], EMBEDDING_DIMENSION), padding='valid',
+        conv_1 = Conv2D(num_filters, kernel_size=(3, 3), padding='valid',
                         kernel_initializer='normal',
                         activation='relu')(reshape)
 
-        maxpool_0 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[0] + 1, 1), strides=(1, 1), padding='valid')(conv_0)
-        maxpool_1 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[1] + 1, 1), strides=(1, 1), padding='valid')(conv_1)
-        maxpool_2 = MaxPool2D(pool_size=(MAX_SEQUENCE_LENGTH - filter_sizes[2] + 1, 1), strides=(1, 1), padding='valid')(conv_2)
 
-        concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1, maxpool_2])
+        maxpool_0 = MaxPool2D(pool_size=(2, 2), padding='valid')(conv_0)
+        maxpool_1 = MaxPool2D(pool_size=(2, 2), padding='valid')(conv_1)
+
+        concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1])
         flatten = Flatten()(concatenated_tensor)
         dropout = Dropout(drop)(flatten)
         output = Dense(units=1, activation='sigmoid')(dropout)
