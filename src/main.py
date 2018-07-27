@@ -1,11 +1,17 @@
 import json
 import numpy as np
-import keras as K
+
 from models.cnn import CNN
 from models.rnn import RNN
+from models.task import Task
+
 import modules.util as util
-import modules.preprocess as pp
+import modules.connect as conn
 import modules.entities as ent
+import modules.preprocess as pp
+import modules.extract as ex
+
+import keras as K
 from keras.preprocessing.text import Tokenizer
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
@@ -15,19 +21,16 @@ sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='
 num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
 _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
 
-## CNN
-# cnn = CNN()
-# cnn.init(num_words, embedding_matrix)
-# r_cnn = cnn.fit(data, targets)
-# util.visualize_data(r_cnn)
-
+# TODO: saving/loading weights
 ## RNN
 rnn = RNN()
 rnn.init(num_words, embedding_matrix)
 r_rnn = rnn.fit(data, targets)
 util.visualize_data(r_rnn)
 
-# predictions = rnn.predict(np.array(test_data))
+## modules/connect.py
+conn.start_serve(rnn, ex.mail_callback)
 
+# predictions = rnn.predict(np.array(test_data))
 # print(len(predictions))
 # print(predictions)

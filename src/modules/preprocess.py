@@ -19,7 +19,7 @@ def preprocess_data(data):
             requires_action.append(p1)
             sentences.append(p2)
         elif len(split) == 1:
-            sentences.append(split)
+            sentences.append(split[0])
 
     ## clean the sentences array (lowercase, special characters, ...)
     clean_sentences = []
