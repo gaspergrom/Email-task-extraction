@@ -23,7 +23,7 @@ sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='
 num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
 _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
 
-## RNN
+## initializing the RNN
 fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
 rnn = RNN()
 
@@ -37,7 +37,3 @@ else:
 
 ## modules/connect.py
 conn.start_serve(rnn, ex.mail_callback)
-
-# predictions = rnn.predict(np.array(test_data))
-# print(len(predictions))
-# print(predictions)

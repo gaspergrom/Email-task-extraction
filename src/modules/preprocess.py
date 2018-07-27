@@ -5,9 +5,9 @@ import modules.util as util
 import matplotlib.pyplot as plt
 from keras_preprocessing.sequence import pad_sequences
 
-config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
-
 def preprocess_data(data):
+    config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
+
     ## split dataset sentences into two arrays (inputs & outputs)
     requires_action = []
     sentences = []

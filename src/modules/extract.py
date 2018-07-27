@@ -1,18 +1,25 @@
 import numpy as np
 
+import modules.entities as ent
 import modules.preprocess as pp
+
+from models.task import Task
 
 """ Gets called when a user receives an email -> extracts the task """
 def mail_callback(nn, sentences):
-    inputs = pp.preprocess_data(sentences)
-    predictions = nn.predict(inputs) # TODO: preveri če je to vse OK
+    print(sentences)
+    _, _, inputs, _ = pp.preprocess_data(sentences)
+    print(inputs)
+    predictions = nn.predict(inputs)
+    print(predictions)
     tasks = []
 
     for i, prediction in enumerate(predictions):
-        if prediction == 1:
+        # if prediction == 1:
+            print("Got a task")
             # get entities for each task and create task objects
             # entities == dictionary (key, val)
-            entities = ent.get_entities(inputs[i])
+            entities = ent.get_entities(sentences[i])
 
             # fill arrays with entities
             # TODO: preveriti, če Google podpira te entityje
@@ -31,8 +38,8 @@ def mail_callback(nn, sentences):
                     time_list.append(value)
 
             task = Task(
-                title = "title here", # TODO: title iz keywodov
-                description = inputs[i],
+                title = "Task title", # TODO: title iz keywodov
+                description = sentences[i],
                 location_list = location_list,
                 person_list = person_list,
                 date_list = date_list,

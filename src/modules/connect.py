@@ -7,7 +7,7 @@ import numpy as np
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 base = "https://clean-sprint-app.intheloop.io"
-authorisation = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfZDE5MzdiZjEtZTk5MS1mMDdlLTMyYmQtNjNmNmY4ZDM1NzNkIiwibmJmIjoxNTMyNjc4MzUyLCJleHAiOjE1MzI2ODE5NTIsImlhdCI6MTUzMjY3ODM1Mn0.WUYBYPoOj9yVx8_peoSSIymG4AKNMrp0Aiv7VlaFS-k'
+authorisation = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfNTY5MTJjZDItMmI1Yi03NDgzLTdjOTYtYTg2MzJlZGVlMzkwIiwibmJmIjoxNTMyNzAyNzgxLCJleHAiOjE1MzI3MDYzODEsImlhdCI6MTUzMjcwMjc4MX0.5aUnwG4sq61f5UFXjMJo11_RWd-rB--hv__IEKDP-V8'
 user = 'user_507'
 
 
@@ -79,15 +79,15 @@ def start_serve(nn, mail_callback):
                 content = response["resources"][0]["comment"]["body"]["content"]
                 content = re.sub(r'\[(.*?)\]', '', content)
                 sentences = re.split('(!|\.|\?)', content)[:-1:2]
-                last_tasks = np.array(mail_callback(nn, sentences))
+                last_tasks = mail_callback(nn, sentences)
                 print("Got an email")
                 if (len(last_tasks) > 0):
                     if (len(last_tasks) > 1):
-                        comment_text = "Found 1 task in your latest email:\n"
-                    else:
                         comment_text = "Found " + str(len(last_tasks)) + " tasks in your latest email:\n"
+                    else:
+                        comment_text = "Found 1 task in your latest email:\n"
                     for task in last_tasks:
-                        comment_text += " - " + task.description
+                        comment_text += " - " + task.description + "\n"
                     send_to_user(comment_text)
 
             elif (type == "CommentChat"):
@@ -107,7 +107,7 @@ def start_serve(nn, mail_callback):
                             task_params = {
                                 'assignee': '381674085905935',
                             }
-                            task_params.title = task.title
+                            task_params['name'] = task.title
                             task_params_notes = "Description: " + task.description + "\n"
                             if len(task.location_list) > 0:
                                 task_params_notes += "Locations: " + ", ".join(task.location_list) + "\n"
