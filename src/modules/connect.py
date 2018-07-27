@@ -14,8 +14,8 @@ user = 'user_507'
 
 def start_serve(mail_callback):
     # request na vsake tok časa da preveri keri so kej novi emaili
-    sinceId = 17917142106750716
-
+    sinceId = 17933766156402694
+    asana_code=str(input("Vnesi asana code: "))
     while True:
         data = urllib.parse.urlencode({
             'offset': 0,
@@ -77,7 +77,7 @@ def start_serve(mail_callback):
                 response = urllib.request.urlopen(req).read()
                 print("extracting...")
             elif (type == "CommentChat"):
-                addtask = response["resources"][0]["comment"]["snippet"].trim().split()[0]
+                addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
 
                 if (addtask == "asana"):
                     print("adding task to asana...")
@@ -87,9 +87,10 @@ def start_serve(mail_callback):
                         redirect_uri='urn:ietf:wg:oauth:2.0:oob'
                     )
 
-                    client.session.fetch_token(code="0/6abffce3c47301527dfd6389c3531122")
+                    client.session.fetch_token(code=asana_code)
                     result = client.tasks.create_in_workspace(756193103565834, {
                         'name': 'Learn to use Nunchucks',
                         'notes': 'This is a test task created with the python-asana client.',
                         'assignee': '381674085905935'
                     })
+    
