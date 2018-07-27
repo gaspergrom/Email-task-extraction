@@ -2,6 +2,10 @@
   "name": "Email extraction tool",
   "description": "Tool to extract tasks from email text",
   "MAX_VOCABULARY": 20000,
+  "MAX_SEQUENCE_LENGTH": 30,
+  "BATCH_SIZE": 64,
+  "EPOCH": 100,
+  "VALIDATION_SPLIT": 0.2,
   "glove_path": "glove/",
   "glove_dimension": 50
 }
