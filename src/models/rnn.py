@@ -17,7 +17,7 @@ class RNN:
         pass
     
     def init(self, num_words, embedding_matrix):
-        print("Creating Model...")
+        print("Creating RNN model")
         model_glove = Sequential()
         model_glove.add(Embedding(num_words, EMBEDDING_DIMENSION, input_length=MAX_SEQUENCE_LENGTH, weights=[embedding_matrix], trainable=False))
         model_glove.add(Dropout(0.2))
@@ -30,11 +30,17 @@ class RNN:
         self.model = model_glove
     
     def fit(self, data, targets):
-        print('Training model')
+        print('Training RNN model')
         r = self.model.fit(data, targets, batch_size=BATCH_SIZE,
                         epochs=EPOCH,
                         validation_split=VALIDATION_SPLIT, shuffle=True)
         return r
     
     def predict(self, input):
+        # TODO: post-processing
         return self.model.predict(input, batch_size=BATCH_SIZE)
+    
+    def save(self, fname):
+        if self.model is not None:
+            print("Saving RNN model")
+            self.model.save(fname)

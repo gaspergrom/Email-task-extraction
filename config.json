@@ -6,6 +6,8 @@
   "BATCH_SIZE": 64,
   "EPOCH": 100,
   "VALIDATION_SPLIT": 0.2,
+  "weights_path": "data/",
+  "weights_file": "weights.h5",
   "glove_path": "glove/",
   "glove_dimension": 50
 }

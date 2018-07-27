@@ -15,6 +15,7 @@ def mail_callback(nn, sentences):
             entities = ent.get_entities(inputs[i])
 
             # fill arrays with entities
+            # TODO: preveriti, če Google podpira te entityje
             location_list = []
             person_list = []
             date_list = []
@@ -30,7 +31,7 @@ def mail_callback(nn, sentences):
                     time_list.append(value)
 
             task = Task(
-                title = "title here",
+                title = "title here", # TODO: title iz keywodov
                 description = inputs[i],
                 location_list = location_list,
                 person_list = person_list,

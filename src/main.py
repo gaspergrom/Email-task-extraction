@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import os.path as path
 
 from models.cnn import CNN
 from models.rnn import RNN
@@ -12,6 +13,7 @@ import modules.preprocess as pp
 import modules.extract as ex
 
 import keras as K
+from keras.models import load_model
 from keras.preprocessing.text import Tokenizer
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
@@ -21,12 +23,17 @@ sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='
 num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
 _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
 
-# TODO: saving/loading weights
 ## RNN
+fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
 rnn = RNN()
-rnn.init(num_words, embedding_matrix)
-r_rnn = rnn.fit(data, targets)
-util.visualize_data(r_rnn)
+
+if path.isfile(fname):
+    rnn = load_model(fname)
+else:
+    rnn.init(num_words, embedding_matrix)
+    r_rnn = rnn.fit(data, targets)
+    rnn.save(fname)
+    util.visualize_data(r_rnn)
 
 ## modules/connect.py
 conn.start_serve(rnn, ex.mail_callback)
