@@ -2,6 +2,8 @@ import json
 from keras import Input, Model
 from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Conv2D, \
     GlobalMaxPooling2D, MaxPooling2D, Reshape, MaxPool2D, Concatenate, Flatten, Dropout
+from random import shuffle
+import numpy as np
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
@@ -55,6 +57,15 @@ class CNN:
         self.model = model
     
     def fit(self, data, targets):
+        tmp = list(zip(data, targets))
+        shuffle(tmp)
+        data, targets = zip(*tmp)
+
+        data = np.array(data)
+        targets = np.array(targets)
+
+
+
         print('Training model')
         r = self.model.fit(
             data,
