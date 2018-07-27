@@ -9,5 +9,5 @@
   "weights_path": "data/",
   "weights_file": "weights.h5",
   "glove_path": "glove/",
-  "glove_dimension": 50
+  "glove_dimension": 100
 }
