@@ -33,5 +33,8 @@ class RNN:
         print('Training model')
         r = self.model.fit(data, targets, batch_size=BATCH_SIZE,
                         epochs=EPOCH,
-                        validation_split=VALIDATION_SPLIT)
+                        validation_split=VALIDATION_SPLIT, shuffle=True)
         return r
+    
+    def predict(self, input):
+        return self.model.predict(input, batch_size=BATCH_SIZE)

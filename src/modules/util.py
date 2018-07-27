@@ -61,6 +61,19 @@ def visualize_data(r):
     plt.legend()
     plt.show()
 
+def apply_threshold(predictions, targets, threshold):
+    error_sum = 0
+
+    for i, prediction in enumerate(predictions):
+        if prediction[0] > threshold:
+            predictions[i] = 1
+        else:
+            predictions[i] = 0
+        
+        error_sum += abs(prediction[0] - targets[i])
+
+    print("Error with threshold {0}: {1}".format(threshold, error_sum / len(targets)))
+
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"i'm", "i am", text)
