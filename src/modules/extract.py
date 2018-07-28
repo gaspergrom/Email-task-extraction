@@ -16,11 +16,8 @@ def mail_callback(nn, sentences, content):
     for i, prediction in enumerate(predictions):
         # if prediction == 1:
             print("Got a task") # TODO: CHECK IF TASK!!
-            # get entities for each task and create task objects
-            # entities == dictionary (key, val)
             entities = ent.get_entities(sentences[i])
 
-            # fill arrays with entities
             location_list = []
             person_list = []
             datetime_list = []
@@ -30,7 +27,6 @@ def mail_callback(nn, sentences, content):
                 elif key == 'PERSON':
                     person_list.append(value)
             
-            # TODO: parse dates/times
             datetimes = search_dates(sentences[i], languages=['en'])
             if datetimes is not None:
                 for datetime in datetimes:
@@ -44,8 +40,8 @@ def mail_callback(nn, sentences, content):
                 description = content,
                 location_list = location_list,
                 person_list = person_list,
-                datetime_list = datetime_list)
-            
+                datetime_list = datetime_list
+            )
             tasks.append(task)
-    
+            
     return tasks

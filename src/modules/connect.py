@@ -9,10 +9,6 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 
-
-# asana = {"data": {"id": 381674085905935,
-#                  "workspaces": [{"id": 609331104373920, "name": "Private"},
-#                                {"id": 756193103565834, "name": "Sicilija"}]}}
 def refresh_token(auth, refresh):
     data = json.dumps({
         "accessToken": auth,
@@ -27,7 +23,6 @@ def refresh_token(auth, refresh):
     authorisation = json.loads(res)["accessToken"]
     refresh_token = json.loads(res)["refreshToken"]
     return authorisation, refresh_token
-
 
 def send_to_user(msg, auth, refresh):
     data = json.dumps({

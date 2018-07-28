@@ -18,7 +18,7 @@ class CNN:
         pass
 
     def init(self, num_words, embedding_matrix):
-        print("Creating Model...")
+        print("Creating model")
         input_ = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
         embedding = Embedding(
             input_dim=num_words,

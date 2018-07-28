@@ -29,6 +29,7 @@ _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
 fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
 rnn = RNN()
 
+# Load the model weights if they already exist (pre-trained models)
 if path.isfile(fname):
     rnn = load_model(fname)
 else:
