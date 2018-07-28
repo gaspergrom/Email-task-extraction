@@ -123,7 +123,7 @@ def start_serve(nn, mail_callback):
                         comment_text = "Found 1 task in your latest email:\n"
                     for task in last_tasks:
                         comment_text += " - " + task.title + "\n"
-                    authorisation, refresh_token = send_to_user(comment_text)
+                    authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
 
             elif (type == "CommentChat"):
                 addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
@@ -148,12 +148,10 @@ def start_serve(nn, mail_callback):
                                 task_params_notes += "Locations: " + ", ".join(task.location_list) + "\n"
                             if len(task.person_list) > 0:
                                 task_params_notes += "Persons: " + ", ".join(task.person_list) + "\n"
-                            if len(task.date_list) > 0:
-                                task_params_notes += "Dates: " + ", ".join(task.date_list) + "\n"
-                                task_params["due_on"] = task.date_list[0]
-                            if len(task.time_list) > 0:
-                                task_params_notes += "Times: " + ", ".join(task.time_list) + "\n"
+                            if len(task.datetime_list) > 0:
+                                task_params_notes += "Dates: " + ", ".join(task.datetime_list) + "\n"
+                                task_params["due_on"] = task.datetime_list[0]
                             task_params["notes"] = task_params_notes
 
                             result = client.tasks.create_in_workspace(756193103565834, task_params)
-                            authorisation, refresh_token = send_to_user("Tasks added successfully!")
+                            authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)

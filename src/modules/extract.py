@@ -24,6 +24,7 @@ def mail_callback(nn, sentences, content):
             # TODO: preveriti, če Google podpira te entityje
             location_list = []
             person_list = []
+            datetime_list = []
             for key, value in entities.items():
                 if key == 'LOCATION':
                     location_list.append(value)
@@ -32,15 +33,19 @@ def mail_callback(nn, sentences, content):
             
             # TODO: parse dates/times
             datetimes = search_dates(sentences[i], languages=['en'])
-            dt = datetimes[0][1]
-            datetime_parsed = '{0}-{1}-{2}'.format(dt.year, dt.month, dt.day)
+            if datetimes is not None:
+                for datetime in datetimes:
+                    dt = datetime[1]
+                    datetime_parsed = '{0}-{1:02d}-{2:02d}'.format(dt.year, dt.month, dt.day)
+                    datetime_list.append(datetime_parsed)
+                    print("Found date: " + datetime_parsed)
 
             task = Task(
-                title = sentences[i], # TODO: title iz keywordov
+                title = sentences[i],
                 description = content,
                 location_list = location_list,
                 person_list = person_list,
-                datetime = datetime_parsed)
+                datetime_list = datetime_list)
             
             tasks.append(task)
     
