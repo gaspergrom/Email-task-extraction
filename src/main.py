@@ -1,35 +1,34 @@
 import json
+import os.path as path
 
-from models.cnn import CNN, CNNKim
+from keras.models import load_model
+
+import modules.connect as conn
+import modules.extract as ex
+from modules.util import preprocess_data, visualize_data
 from models.rnn import RNN
-from modules.util import visualize_data, preprocess_data, precision_recall_plot
 
+## Loading config & datasets
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 sentences_training = open(r'datasets/sentences_training.txt', encoding='utf-8', errors='ignore').read().split('\n')
 sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
+## Preprocessing data
 num_words, embedding_matrix, data, targets = preprocess_data(sentences_training)
-_, _, x_test, y_test = preprocess_data(sentences_test, test_data=True)
+_, _, test_data, test_targets = preprocess_data(sentences_test)
 
-# CNN
-cnn = CNNKim()
-cnn.init(num_words, embedding_matrix)
-r_cnn = cnn.fit(data, targets)
-visualize_data(r_cnn)
+## Initializing the RNN
+fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
+rnn = RNN()
 
-y_pred = cnn.predict(x_test)
+# Load the model weights if they already exist (pre-trained models)
+if path.isfile(fname):
+    rnn = load_model(fname)
+else:
+    rnn.init(num_words, embedding_matrix)
+    r_rnn = rnn.fit(data, targets)
+    rnn.save(fname)
+    visualize_data(r_rnn)
 
-## RNN
-# rnn = RNN()
-# rnn.init(num_words, embedding_matrix)
-# r_rnn = rnn.fit(data, targets)
-# visualize_data(r_rnn)
-#
-# y_pred = rnn.predict(x_test)
-
-precision_recall_plot(y_test, y_pred)
-
-# predictions = rnn.predict(np.array(test_data))
-
-# print(len(predictions))
-# print(predictions)
+## Listening to new emails
+conn.start_serve(rnn, ex.mail_callback)
