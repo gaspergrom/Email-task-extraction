@@ -1,5 +1,7 @@
 import json
 from keras import Input, Model, Sequential
+from random import shuffle
+import numpy as np
 from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Conv2D, \
     GlobalMaxPooling2D, MaxPooling2D, Reshape, MaxPool2D, Concatenate, Flatten, Dropout, LSTM
 
@@ -30,16 +32,23 @@ class RNN:
         self.model = model_glove
     
     def fit(self, data, targets):
-        print('Training RNN model')
+        tmp = list(zip(data, targets))
+        shuffle(tmp)
+        data, targets = zip(*tmp)
+
+        data = np.array(data)
+        targets = np.array(targets)
+
+        print('Training model')
         r = self.model.fit(data, targets, batch_size=BATCH_SIZE,
                         epochs=EPOCH,
-                        validation_split=VALIDATION_SPLIT, shuffle=True)
+                        validation_split=VALIDATION_SPLIT)
         return r
     
     def predict(self, input):
         # TODO: post-processing
         return self.model.predict(input, batch_size=BATCH_SIZE)
-    
+
     def save(self, fname):
         if self.model is not None:
             print("Saving RNN model")
