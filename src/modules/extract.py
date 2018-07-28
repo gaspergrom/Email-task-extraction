@@ -21,7 +21,6 @@ def mail_callback(nn, sentences, content):
             entities = ent.get_entities(sentences[i])
 
             # fill arrays with entities
-            # TODO: preveriti, če Google podpira te entityje
             location_list = []
             person_list = []
             datetime_list = []
