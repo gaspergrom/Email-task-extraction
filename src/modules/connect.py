@@ -119,10 +119,6 @@ def start_serve(nn, mail_callback):
                     for task in last_tasks:
                         comment_text += " - " + task.title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
-
-                    ## DEBUGGING
-                    add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
-
             elif (type == "CommentChat"):
                 addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
 
