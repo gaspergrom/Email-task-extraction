@@ -1,6 +1,6 @@
 import json
 
-from models.cnn import CNN
+from models.cnn import CNN, CNNKim
 from models.rnn import RNN
 from modules.util import visualize_data, preprocess_data, precision_recall_plot
 
@@ -12,7 +12,7 @@ num_words, embedding_matrix, data, targets = preprocess_data(sentences_training)
 _, _, x_test, y_test = preprocess_data(sentences_test, test_data=True)
 
 # CNN
-cnn = CNN()
+cnn = CNNKim()
 cnn.init(num_words, embedding_matrix)
 r_cnn = cnn.fit(data, targets)
 visualize_data(r_cnn)
