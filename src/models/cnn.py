@@ -95,14 +95,14 @@ class CNNKim:
                           padding='valid',
                           activation='relu',
                           strides=1)(graph_in)
-            pool = MaxPooling1D(pool_length=MAX_SEQUENCE_LENGTH - fsz + 1)(conv)
+            pool = MaxPooling1D(pool_size=MAX_SEQUENCE_LENGTH - fsz + 1)(conv)
             flattenMax = Flatten()(pool)
             convs.append(flattenMax)
         if len(filter_sizes) > 1:
             out = Concatenate(axis=1)(convs)
         else:
             out = convs[0]
-        graph = Model(input=graph_in, output=out, name="graphModel")
+        graph = Model(inputs=graph_in, outputs=out, name="graphModel")
         model = Sequential()
         model.add(Embedding(input_dim=num_words,  # size of vocabulary
                             output_dim=EMBEDDING_DIMENSION,
