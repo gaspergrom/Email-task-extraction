@@ -2,6 +2,8 @@ import json
 import numpy as np
 import os.path as path
 
+from flask import Flask, request
+
 from models.cnn import CNN
 from models.rnn import RNN
 from models.task import Task
@@ -37,3 +39,20 @@ else:
 
 ## modules/connect.py
 conn.start_serve(rnn, ex.mail_callback)
+
+## flask server
+# run with:
+# $env:FLASK_APP = "main.py"
+# python -m flask run
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    print('Hello there!')
+    return 'Hello, World! We here'
+
+@app.route('/taskext', methods=['POST'])
+def submitted_form():
+    print(request)
+    # TODO: something with this
+    return 'Post request, thank you!'
