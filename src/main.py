@@ -39,8 +39,8 @@ if path.isfile(fname):
         rnn.save(fname)
         util.visualize_data(r_rnn)
 
-## modules/connect.py
-conn.start_serve(rnn, ex.mail_callback)
+    ## modules/connect.py
+    conn.start_serve(rnn, ex.mail_callback)
 
 ## flask server
 # run with:
@@ -53,7 +53,7 @@ def hello_world():
     print('Hello there!')
     return 'Hello, World! We here'
 
-@app.route('/taskext', methods=['POST'])
+@app.route('/tasks', methods=['POST'])
 def submitted_form():
     print(request)
     # TODO: something with this
