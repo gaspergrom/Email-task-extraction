@@ -7,14 +7,29 @@ import numpy as np
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 base = "https://clean-sprint-app.intheloop.io"
-authorisation = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfNTY5MTJjZDItMmI1Yi03NDgzLTdjOTYtYTg2MzJlZGVlMzkwIiwibmJmIjoxNTMyNzAyNzgxLCJleHAiOjE1MzI3MDYzODEsImlhdCI6MTUzMjcwMjc4MX0.5aUnwG4sq61f5UFXjMJo11_RWd-rB--hv__IEKDP-V8'
 user = 'user_507'
 
 
 # asana = {"data": {"id": 381674085905935,
 #                  "workspaces": [{"id": 609331104373920, "name": "Private"},
-#                                 {"id": 756193103565834, "name": "Sicilija"}]}}
-def send_to_user(msg):
+#                                {"id": 756193103565834, "name": "Sicilija"}]}}
+def refresh_token(auth, refresh):
+    data = json.dumps({
+        "accessToken": auth,
+        "refreshToken": refresh
+    }).encode("utf-8")
+
+    r = urllib.request.Request(base + '/api/v1/comment/chat', data)
+    r.add_header("Content-Type",
+                 'application/json')
+    r.add_header("Authorization", "Bearer " + auth)
+    res = urllib.request.urlopen(r).read()
+    authorisation = json.loads(res)["accessToken"]
+    refresh_token = json.loads(res)["refreshToken"]
+    return authorisation, refresh_token
+
+
+def send_to_user(msg, auth, refresh):
     data = json.dumps({
         "$type": "CommentChat",
         "shareList": {
@@ -44,8 +59,17 @@ def send_to_user(msg):
     req = urllib.request.Request(base + '/api/v1/comment/chat', data)
     req.add_header("Content-Type",
                    'application/json')
-    req.add_header("Authorization", authorisation)
-    response = urllib.request.urlopen(req).read()
+    req.add_header("Authorization", "Bearer " + auth)
+    try:
+        response = urllib.request.urlopen(req).read()
+    except Exception:
+        auth, refresh=refresh_token(auth, refresh)
+        req = urllib.request.Request(base + '/api/v1/comment/chat', data)
+        req.add_header("Content-Type",
+                       'application/json')
+        req.add_header("Authorization", "Bearer " + auth)
+        response = urllib.request.urlopen(req).read()
+    return auth, refresh
 
 
 def start_serve(nn, mail_callback):
@@ -53,6 +77,10 @@ def start_serve(nn, mail_callback):
     sinceId = 17933766156402694
     asana_code = str(input("Vnesi asana code: "))
     last_tasks = []
+    base = "https://clean-sprint-app.intheloop.io"
+    authorisation = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfOTBkZWFkNDQtZDRhZi0zZDY0LTY0YjgtZDY0N2M0ZTcwNDc3IiwibmJmIjoxNTMyNzY3MTc1LCJleHAiOjE1MzI3NzA3NzUsImlhdCI6MTUzMjc2NzE3NX0.VjDWYiKS3ja5dClZw6cSPYxc0RVFyDiRQzYNeGFaq78'
+    user = 'user_507'
+    refresh_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfNTk1ZDdlMmUtZDQyYy1mNjVhLThiODEtMmY0MjE2YTY4YTQ2IiwibmJmIjoxNTMyNzY2Mzk1LCJleHAiOjE1MzI3Njk5OTUsImlhdCI6MTUzMjc2NjM5NX0.cCCwviQt2KzTDDGfVML-0Ihjk4yZyBmui8YQyuNo6kI"
 
     while True:
         data = urllib.parse.urlencode({
@@ -65,9 +93,16 @@ def start_serve(nn, mail_callback):
         })
 
         req = urllib.request.Request(base + '/api/v1/event/list?' + data)
-        req.add_header("Authorization", authorisation)
+        req.add_header("Authorization", "Bearer " + authorisation)
         req.add_header("X-Impersonate-User", user)
-        response = urllib.request.urlopen(req).read().decode('utf8')
+        try:
+            response = urllib.request.urlopen(req).read().decode('utf8')
+        except Exception:
+            authorisation, refresh_token = refresh_token(authorisation, refresh_token)
+            req = urllib.request.Request(base + '/api/v1/event/list?' + data)
+            req.add_header("Authorization", "Bearer " + authorisation)
+            req.add_header("X-Impersonate-User", user)
+            response = urllib.request.urlopen(req).read().decode('utf8')
         response = json.loads(response)
         sinceId = response["lastEventId"]
         print(sinceId)
@@ -79,7 +114,7 @@ def start_serve(nn, mail_callback):
                 content = response["resources"][0]["comment"]["body"]["content"]
                 content = re.sub(r'\[(.*?)\]', '', content)
                 sentences = re.split('(!|\.|\?)', content)[:-1:2]
-                last_tasks = mail_callback(nn, sentences)
+                last_tasks = mail_callback(nn, sentences, content)
                 print("Got an email")
                 if (len(last_tasks) > 0):
                     if (len(last_tasks) > 1):
@@ -87,8 +122,8 @@ def start_serve(nn, mail_callback):
                     else:
                         comment_text = "Found 1 task in your latest email:\n"
                     for task in last_tasks:
-                        comment_text += " - " + task.description + "\n"
-                    send_to_user(comment_text)
+                        comment_text += " - " + task.title + "\n"
+                    authorisation, refresh_token = send_to_user(comment_text)
 
             elif (type == "CommentChat"):
                 addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
@@ -121,4 +156,4 @@ def start_serve(nn, mail_callback):
                             task_params["notes"] = task_params_notes
 
                             result = client.tasks.create_in_workspace(756193103565834, task_params)
-                            send_to_user("Tasks added successfully!")
+                            authorisation, refresh_token = send_to_user("Tasks added successfully!")
