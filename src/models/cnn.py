@@ -9,6 +9,8 @@ config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read(
 
 MAX_SEQUENCE_LENGTH = config['MAX_SEQUENCE_LENGTH']
 EMBEDDING_DIMENSION = config['glove_dimension']
+BATCH_SIZE = config['BATCH_SIZE']
+
 
 filter_sizes = [3, 4, 5]
 num_filters = 512
@@ -75,3 +77,6 @@ class CNN:
             validation_split=config['VALIDATION_SPLIT']
         )
         return r
+
+    def predict(self, input):
+        return self.model.predict(input, batch_size=BATCH_SIZE)

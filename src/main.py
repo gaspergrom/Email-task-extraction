@@ -1,5 +1,6 @@
 import json
 
+from models.cnn import CNN
 from models.rnn import RNN
 from modules.util import visualize_data, preprocess_data, precision_recall_plot
 
@@ -11,18 +12,20 @@ num_words, embedding_matrix, data, targets = preprocess_data(sentences_training)
 _, _, x_test, y_test = preprocess_data(sentences_test, test_data=True)
 
 # CNN
-# cnn = CNN()
-# cnn.init(num_words, embedding_matrix)
-# r_cnn = cnn.fit(data, targets)
-# visualize_data(r_cnn)
+cnn = CNN()
+cnn.init(num_words, embedding_matrix)
+r_cnn = cnn.fit(data, targets)
+visualize_data(r_cnn)
+
+y_pred = cnn.predict(x_test)
 
 ## RNN
-rnn = RNN()
-rnn.init(num_words, embedding_matrix)
-r_rnn = rnn.fit(data, targets)
-visualize_data(r_rnn)
-
-y_pred = rnn.predict(x_test)
+# rnn = RNN()
+# rnn.init(num_words, embedding_matrix)
+# r_rnn = rnn.fit(data, targets)
+# visualize_data(r_rnn)
+#
+# y_pred = rnn.predict(x_test)
 
 precision_recall_plot(y_test, y_pred)
 

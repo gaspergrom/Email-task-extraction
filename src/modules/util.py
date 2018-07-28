@@ -71,7 +71,7 @@ class Tokenization:
         else:
             if refit:
                 print("Warning: Refitting the tokenizer might change your index table")
-                Glove.tokenizer.fit_on_texts(texts)
+                Tokenization.tokenizer.fit_on_texts(texts)
 
             sequences = Tokenization.tokenizer.texts_to_sequences(texts)
             return sequences, Tokenization.tokenizer.word_index
