@@ -1,52 +1,79 @@
-import re
 import json
-import numpy as np
-from keras.preprocessing.text import Tokenizer
+import re
 
 import matplotlib.pyplot as plt
+import numpy as np
+from keras.preprocessing.text import Tokenizer
+from keras_preprocessing.sequence import pad_sequences
+from sklearn.metrics import precision_recall_curve, average_precision_score
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
 MAX_VOCABULARY = config['MAX_VOCABULARY']
 
-def get_glove_word2vec(path, dimension):
-    print("Loading word vectors...")
-    word2vec = dict()
-    
-    with open('{0}glove.6B.{1}d.txt'.format(path, dimension), 'r', encoding='utf-8') as f:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            vec = np.asarray(values[1:], dtype='float32')
-            word2vec[word] = vec
-    return word2vec
 
-def create_embedding_matrix(word2idx, word2vec, num_words, EMBEDDING_DIM):
-    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
+class Glove:
+    word2vec = None
+    embedding_matrix = None
 
-    for word, i in word2idx.items():
-        if i < num_words:
-            embedding_vector = word2vec.get(word)
+    @staticmethod
+    def get_word2vec(path, dimension):
+        if Glove.word2vec:
+            return Glove.word2vec
 
-            # other vectors will be all zeros
-            if embedding_vector is not None:
-                embedding_matrix[i] = embedding_vector
+        print("Loading word vectors...")
+        word2vec = dict()
+        with open('{0}glove.6B.{1}d.txt'.format(path, dimension), 'r', encoding='utf-8') as f:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                vec = np.asarray(values[1:], dtype='float32')
+                word2vec[word] = vec
 
-    return embedding_matrix
+        Glove.word2vec = word2vec
+        return word2vec
+
+    @staticmethod
+    def create_embedding_matrix(word2idx, num_words, EMBEDDING_DIM, recreate=False):
+        if Glove.embedding_matrix and not recreate:
+            return Glove.embedding_matrix
+
+        Glove.embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
+
+        for word, i in word2idx.items():
+            if i < num_words:
+                embedding_vector = Glove.word2vec.get(word)
+
+                # other vectors will be all zeros
+                if embedding_vector is not None:
+                    Glove.embedding_matrix[i] = embedding_vector
+
+        return Glove.embedding_matrix
 
 
-def tokenize(texts, max_vocabulary):
-    """
-    :param texts:
-    :param max_vocabulary:
-    :return: sequences of integers corresponding to texts, word -> integer mapping
-    """
+class Tokenization:
+    tokenizer = None
 
-    tokenizer = Tokenizer(num_words=max_vocabulary)
-    tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(texts)
+    @staticmethod
+    def tokenize(texts, max_vocabulary, refit=True):
+        """
+        :param texts:
+        :param max_vocabulary:
+        :return: sequences of integers corresponding to texts, word -> integer mapping
+        """
+        if not Tokenization.tokenizer:
+            Tokenization.tokenizer = Tokenizer(num_words=max_vocabulary)
+            Tokenization.tokenizer.fit_on_texts(texts)
+            sequences = Tokenization.tokenizer.texts_to_sequences(texts)
+            return sequences, Tokenization.tokenizer.word_index
+        else:
+            if refit:
+                print("Warning: Refitting the tokenizer might change your index table")
+                Glove.tokenizer.fit_on_texts(texts)
 
-    return sequences, tokenizer.word_index
+            sequences = Tokenization.tokenizer.texts_to_sequences(texts)
+            return sequences, Tokenization.tokenizer.word_index
+
 
 def visualize_data(r):
     # visualise
@@ -61,6 +88,30 @@ def visualize_data(r):
     plt.legend()
     plt.show()
 
+
+def precision_recall_plot(targets, predictions):
+    prec, recall, _ = precision_recall_curve(targets, predictions)
+
+    average_precision = average_precision_score(targets, predictions)
+
+    plt.step(recall, prec, alpha=0.2)
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title('Average Precision={0:0.2f}'.format(
+        average_precision))
+    plt.show()
+
+
+def predict_on_test(model):
+    data = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
+    x_test, y_test, _, _ = preprocess_data(data, test_data=True)
+
+    return model.predict(x_test)
+
+
+
 def apply_threshold(predictions, targets, threshold):
     error_sum = 0
 
@@ -69,10 +120,11 @@ def apply_threshold(predictions, targets, threshold):
             predictions[i] = 1
         else:
             predictions[i] = 0
-        
+
         error_sum += abs(prediction[0] - targets[i])
 
     print("Error with threshold {0}: {1}".format(threshold, error_sum / len(targets)))
+
 
 def clean_text(text):
     text = text.lower()
@@ -146,3 +198,58 @@ def clean_text(text):
     text = re.sub('\s+', ' ', text)
     text = text.strip()
     return text
+
+def preprocess_data(data, test_data=False):
+    ## split dataset sentences into two arrays (inputs & outputs)
+    requires_action = []
+    sentences = []
+    for sentence in data:
+        split = sentence.split('\t')
+        if len(split) == 2:
+            p1 = split[0]
+            p2 = split[1]
+            requires_action.append(p1)
+            sentences.append(p2)
+        elif len(split) == 1:
+            sentences.append(split)
+
+    ## clean the sentences array (lowercase, special characters, ...)
+    clean_sentences = []
+    for sentence in sentences:
+        clean_sentences.append(clean_text(sentence))
+
+    ## count how many times a word appears in the dataset
+    word2count = {}
+    for sentence in clean_sentences:
+        for word in sentence.split():
+            if word not in word2count:
+                word2count[word] = 1
+            else:
+                word2count[word] += 1
+
+    ## create a words2int dictionary
+    words2int = {}
+    word_number = 0
+    for word, count in word2count.items():
+        words2int[word] = word_number
+        word_number += 1
+
+    ## create an action array (yes -> 1, no -> 0)
+    action_into_int = []
+    if len(requires_action) > 0:
+        for action in requires_action:
+            if action.lower() == 'yes':
+                action_into_int.append(1)
+            else:
+                action_into_int.append(0)
+
+    ## pass the dataset through the tokenizer
+    refit = not test_data
+    sequences, word_index = Tokenization.tokenize(clean_sentences, config['MAX_VOCABULARY'], refit=refit)
+    word2vec = Glove.get_word2vec(config['glove_path'], config['glove_dimension'])
+    num_words = min(config['MAX_VOCABULARY'], len(word_index) + 1)
+    embedding_matrix = Glove.create_embedding_matrix(words2int, num_words, config['glove_dimension'], recreate=refit)
+    data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
+    targets = np.array(action_into_int)
+
+    return num_words, embedding_matrix, data, targets

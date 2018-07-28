@@ -4,7 +4,7 @@
   "MAX_VOCABULARY": 20000,
   "MAX_SEQUENCE_LENGTH": 25,
   "BATCH_SIZE": 64,
-  "EPOCH": 100,
+  "EPOCH": 15,
   "VALIDATION_SPLIT": 0.2,
   "weights_path": "data/",
   "weights_file": "weights.h5",
