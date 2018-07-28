@@ -24,6 +24,34 @@ def refresh_token(auth, refresh):
     refresh_token = json.loads(res)["refreshToken"]
     return authorisation, refresh_token
 
+
+def send_to_google(text):
+    url_addr = "https://dialogflow.googleapis.com/v2/projects/chatbot-loop/agent/sessions/b684f4f1-3b5f-ad82-9e24-5186ce5a0c5e:detectIntent"
+    auth_token = "ya29.c.EloGBgAI8Jv5QPbV3idWADK7wbBlI05vcAdvXMBfSuZW_n5vZ7Tfw9o6ERLpjn-r94SRKDIhP3EvJJtLnTIIKVOc7tCN2RdYZcPSgw56Dw-u7RXDP9QYjo_EsuE"
+    data = json.dumps({
+        "queryInput": {
+            "text": {
+                "text": text,
+                "languageCode": "en"
+            }
+        },
+        "queryParams": {
+            "timeZone": "Europe/Ljubljana"
+        }
+    }).encode("utf-8")
+
+    # request
+    req = urllib.request.Request(url_addr, data)
+    req.add_header("Content-Type",
+                   'application/json')
+    req.add_header("Authorization", "Bearer " + auth_token)
+    response = urllib.request.urlopen(req).read()
+    print(response)
+
+    return response
+
+
+
 def send_to_user(msg, auth, refresh):
     data = json.dumps({
         "$type": "CommentChat",
@@ -120,8 +148,10 @@ def start_serve(nn, mail_callback):
                         comment_text += " - " + task.title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
             elif (type == "CommentChat"):
-                addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
-
+                # addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
+                user_response = response["resources"][0]["comment"]["snippet"].strip()
+                parsed = send_to_google(user_response)
+                addtask = ""
                 if (addtask == "asana"):
                     if len(last_tasks) > 0:
                         add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
