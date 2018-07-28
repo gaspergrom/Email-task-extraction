@@ -188,7 +188,7 @@ def clean_text(text):
     text = re.sub(r"some'b'y", "somebody", text)
     text = re.sub(r"\'er", " her", text)
     text = re.sub(r"\'", " ", text)
-    text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text)
+    # text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text)
     text = re.sub('\s+', ' ', text)
     text = text.strip()
     return text
