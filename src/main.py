@@ -39,8 +39,8 @@ if path.isfile(fname):
         rnn.save(fname)
         util.visualize_data(r_rnn)
 
-## modules/connect.py
-conn.start_serve(rnn, ex.mail_callback)
+    ## modules/connect.py
+    conn.start_serve(rnn, ex.mail_callback)
 
 ## flask server
 # run with:
