@@ -24,6 +24,7 @@ def mail_callback(nn, sentences, content):
             datetime_list = []
             saved = ""
             for key, value in entities.items():
+                print("{0} - {1}".format(key, value))
                 if key == 'name':
                     saved = value
                 elif key == 'type':
