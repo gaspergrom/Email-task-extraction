@@ -6,12 +6,9 @@ import modules.preprocess as pp
 from models.task import Task
 
 """ Gets called when a user receives an email -> extracts the task """
-def mail_callback(nn, sentences):
-    print(sentences)
+def mail_callback(nn, sentences, content):
     _, _, inputs, _ = pp.preprocess_data(sentences)
-    print(inputs)
     predictions = nn.predict(inputs)
-    print(predictions)
     tasks = []
 
     for i, prediction in enumerate(predictions):
@@ -32,14 +29,12 @@ def mail_callback(nn, sentences):
                     location_list.append(value)
                 elif key == 'PERSON':
                     person_list.append(value)
-                elif key == 'DATE':
-                    date_list.append(value)
-                elif key == 'TIME':
-                    time_list.append(value)
+            
+            # TODO: parse dates/times
 
             task = Task(
-                title = "Task title", # TODO: title iz keywodov
-                description = sentences[i],
+                title = sentences[i], # TODO: title iz keywordov
+                description = content,
                 location_list = location_list,
                 person_list = person_list,
                 date_list = date_list,
