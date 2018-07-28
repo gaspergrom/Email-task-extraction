@@ -14,6 +14,7 @@ MAX_VOCABULARY = config['MAX_VOCABULARY']
 
 class Glove:
     word2vec = None
+    embedding_matrix_loaded = False
     embedding_matrix = None
 
     @staticmethod
@@ -35,7 +36,7 @@ class Glove:
 
     @staticmethod
     def create_embedding_matrix(word2idx, num_words, EMBEDDING_DIM, recreate=False):
-        if Glove.embedding_matrix and not recreate:
+        if Glove.embedding_matrix_loaded and not recreate:
             return Glove.embedding_matrix
 
         Glove.embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
@@ -48,6 +49,7 @@ class Glove:
                 if embedding_vector is not None:
                     Glove.embedding_matrix[i] = embedding_vector
 
+        Glove.embedding_matrix_loaded = True
         return Glove.embedding_matrix
 
 
@@ -102,14 +104,6 @@ def precision_recall_plot(targets, predictions):
     plt.title('Average Precision={0:0.2f}'.format(
         average_precision))
     plt.show()
-
-
-def predict_on_test(model):
-    data = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
-    x_test, y_test, _, _ = preprocess_data(data, test_data=True)
-
-    return model.predict(x_test)
-
 
 
 def apply_threshold(predictions, targets, threshold):
@@ -198,6 +192,7 @@ def clean_text(text):
     text = re.sub('\s+', ' ', text)
     text = text.strip()
     return text
+
 
 def preprocess_data(data, test_data=False):
     ## split dataset sentences into two arrays (inputs & outputs)
