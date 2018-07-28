@@ -1,9 +1,10 @@
 import json
-from keras import Input, Model, Sequential
-from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Conv2D, \
-    GlobalMaxPooling2D, MaxPooling2D, Reshape, MaxPool2D, Concatenate, Flatten, Dropout, Activation
 from random import shuffle
+
 import numpy as np
+from keras import Input, Model, Sequential
+from keras.layers import Embedding, Conv1D, MaxPooling1D, Dense, Conv2D, \
+    Reshape, MaxPool2D, Concatenate, Flatten, Dropout, Activation
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
@@ -64,8 +65,6 @@ class CNN:
         data = np.array(data)
         targets = np.array(targets)
 
-
-
         print('Training model')
         r = self.model.fit(
             data,
@@ -91,11 +90,11 @@ class CNNKim:
         graph_in = Input(shape=(MAX_SEQUENCE_LENGTH, EMBEDDING_DIMENSION))
         convs = []
         for fsz in filter_sizes:
-            conv = Conv1D(nb_filter=32,
-                                 filter_length=fsz,
-                                 border_mode='valid',
-                                 activation='relu',
-                                 subsample_length=1)(graph_in)
+            conv = Conv1D(32,
+                          fsz,
+                          padding='valid',
+                          activation='relu',
+                          strides=1)(graph_in)
             pool = MaxPooling1D(pool_length=MAX_SEQUENCE_LENGTH - fsz + 1)(conv)
             flattenMax = Flatten()(pool)
             convs.append(flattenMax)
@@ -108,7 +107,7 @@ class CNNKim:
         model.add(Embedding(input_dim=num_words,  # size of vocabulary
                             output_dim=EMBEDDING_DIMENSION,
                             input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=True))
+                            trainable=False))
         model.add(Dropout(dropout_prob[0]))
         model.add(graph)
         model.add(Dense(128))
