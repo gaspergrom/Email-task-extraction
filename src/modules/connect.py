@@ -120,33 +120,39 @@ def start_serve(nn, mail_callback):
                         comment_text += " - " + task.title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
 
+                    ## DEBUGGING
+                    add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
+
             elif (type == "CommentChat"):
                 addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
 
                 if (addtask == "asana"):
                     if len(last_tasks) > 0:
-                        print("adding task to asana...")
-                        client = asana.Client.oauth(
-                            client_id='759566842403050',
-                            client_secret='6316248cc3531236f6796574ef8bcc4a',
-                            redirect_uri='urn:ietf:wg:oauth:2.0:oob'
-                        )
+                        add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
 
-                        client.session.fetch_token(code=asana_code)
-                        for task in last_tasks:
-                            task_params = {
-                                'assignee': '381674085905935',
-                            }
-                            task_params['name'] = task.title
-                            task_params_notes = "Description: " + task.description + "\n"
-                            if len(task.location_list) > 0:
-                                task_params_notes += "Locations: " + ", ".join(task.location_list) + "\n"
-                            if len(task.person_list) > 0:
-                                task_params_notes += "Persons: " + ", ".join(task.person_list) + "\n"
-                            if len(task.datetime_list) > 0:
-                                task_params_notes += "Dates: " + ", ".join(task.datetime_list) + "\n"
-                                task_params["due_on"] = task.datetime_list[0]
-                            task_params["notes"] = task_params_notes
+def add_to_asana(asana_code, last_tasks, authorisation, refresh_token):
+    print("adding task to asana...")
+    client = asana.Client.oauth(
+        client_id='759566842403050',
+        client_secret='6316248cc3531236f6796574ef8bcc4a',
+        redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+    )
 
-                            result = client.tasks.create_in_workspace(756193103565834, task_params)
-                            authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)
+    client.session.fetch_token(code=asana_code)
+    for task in last_tasks:
+        task_params = {
+            'assignee': '381674085905935',
+        }
+        task_params['name'] = task.title
+        task_params_notes = "Description: " + task.description + "\n"
+        if len(task.location_list) > 0:
+            task_params_notes += "Locations: " + ", ".join(task.location_list) + "\n"
+        if len(task.person_list) > 0:
+            task_params_notes += "Persons: " + ", ".join(task.person_list) + "\n"
+        if len(task.datetime_list) > 0:
+            task_params_notes += "Dates: " + ", ".join(task.datetime_list) + "\n"
+            task_params["due_on"] = task.datetime_list[0]
+        task_params["notes"] = task_params_notes
+
+        result = client.tasks.create_in_workspace(756193103565834, task_params)
+        authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)

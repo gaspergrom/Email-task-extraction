@@ -1,3 +1,4 @@
+import json
 import numpy as np
 
 import modules.entities as ent
@@ -21,12 +22,16 @@ def mail_callback(nn, sentences, content):
             location_list = []
             person_list = []
             datetime_list = []
+            saved = ""
             for key, value in entities.items():
-                if key == 'LOCATION':
-                    location_list.append(value)
-                elif key == 'PERSON':
-                    person_list.append(value)
-            
+                if key == 'name':
+                    saved = value
+                elif key == 'type':
+                    if value == 'LOCATION':
+                        location_list.append(saved)
+                    elif value == 'PERSON':
+                        person_list.append(saved)
+
             datetimes = search_dates(sentences[i], languages=['en'])
             if datetimes is not None:
                 for datetime in datetimes:
