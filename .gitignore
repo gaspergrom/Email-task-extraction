@@ -6,6 +6,7 @@ __pycache__/
 chatbot_weights*
 checkpoint
 glove/
+<<<<<<< HEAD
 .vscode/
 
 # Byte-compiled / optimized / DLL files
@@ -112,3 +113,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+datasets/enron
+.vscode/

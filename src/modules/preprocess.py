@@ -55,8 +55,8 @@ def preprocess_data(data):
     sequences, word_index = util.tokenize(clean_sentences, config['MAX_VOCABULARY'])
     word2vec = util.get_glove_word2vec(config['glove_path'], config['glove_dimension'])
     num_words = min(config['MAX_VOCABULARY'], len(word_index) + 1)
-    embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, config['glove_dimension'])
     data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
     targets = np.array(action_into_int)
+    embedding_matrix = util.create_embedding_matrix(words2int, word2vec, num_words, config['glove_dimension'])
 
     return num_words, embedding_matrix, data, targets

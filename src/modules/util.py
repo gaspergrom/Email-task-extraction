@@ -12,6 +12,7 @@ MAX_VOCABULARY = config['MAX_VOCABULARY']
 def get_glove_word2vec(path, dimension):
     print("Loading word vectors...")
     word2vec = dict()
+    
     with open('{0}glove.6B.{1}d.txt'.format(path, dimension), 'r', encoding='utf-8') as f:
         for line in f:
             values = line.split()
@@ -19,7 +20,6 @@ def get_glove_word2vec(path, dimension):
             vec = np.asarray(values[1:], dtype='float32')
             word2vec[word] = vec
     return word2vec
-
 
 def create_embedding_matrix(word2idx, word2vec, num_words, EMBEDDING_DIM):
     embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
