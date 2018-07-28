@@ -39,6 +39,17 @@ if path.isfile(fname):
         rnn.save(fname)
         util.visualize_data(r_rnn)
 
+    # # debugging
+
+    # ex.mail_callback(rnn, [
+    #     'Today is the 2nd of August',
+    #     'Meet me tomorrow at 5pm.',
+    #     'Lets meet at 4:00',
+    #     'They are moving next year.'
+    # ], 'Today is the 2nd of August. Meet me tomorrow at 5pm. Lets meet at 4:00 They are moving next year.')
+
+    # # end-of debugging
+
     ## modules/connect.py
     conn.start_serve(rnn, ex.mail_callback)
 

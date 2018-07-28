@@ -5,7 +5,7 @@ import modules.preprocess as pp
 
 from models.task import Task
 
-from dateutil.parser import parse
+from dateparser.search import search_dates
 
 """ Gets called when a user receives an email -> extracts the task """
 def mail_callback(nn, sentences, content):
@@ -24,7 +24,6 @@ def mail_callback(nn, sentences, content):
             # TODO: preveriti, če Google podpira te entityje
             location_list = []
             person_list = []
-            datetime_list = []
             for key, value in entities.items():
                 if key == 'LOCATION':
                     location_list.append(value)
@@ -32,15 +31,16 @@ def mail_callback(nn, sentences, content):
                     person_list.append(value)
             
             # TODO: parse dates/times
-            datetime = parse(sentences[i])
-            print(datetime)
+            datetimes = search_dates(sentences[i], languages=['en'])
+            dt = datetimes[0][1]
+            datetime_parsed = '{0}-{1}-{2}'.format(dt.year, dt.month, dt.day)
 
             task = Task(
                 title = sentences[i], # TODO: title iz keywordov
                 description = content,
                 location_list = location_list,
                 person_list = person_list,
-                datetime_list = datetime_list)
+                datetime = datetime_parsed)
             
             tasks.append(task)
     
