@@ -22,20 +22,22 @@ config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read(
 sentences_training = open(r'datasets/sentences_training.txt', encoding='utf-8', errors='ignore').read().split('\n')
 sentences_test = open(r'datasets/sentences_test.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
-num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
-_, _, test_data, test_targets = pp.preprocess_data(sentences_test)
-
-## initializing the RNN
-fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
-rnn = RNN()
-
+fname = '{0}glove.6B.{1}d.txt'.format(config['glove_path'], config['glove_dimension'])
 if path.isfile(fname):
-    rnn = load_model(fname)
-else:
-    rnn.init(num_words, embedding_matrix)
-    r_rnn = rnn.fit(data, targets)
-    rnn.save(fname)
-    util.visualize_data(r_rnn)
+    num_words, embedding_matrix, data, targets = pp.preprocess_data(sentences_training)
+    _, _, test_data, test_targets = pp.preprocess_data(sentences_test)
+
+    ## initializing the RNN
+    fname = "{0}{1}".format(config['weights_path'], config['weights_file'])
+    rnn = RNN()
+
+    if path.isfile(fname):
+        rnn = load_model(fname)
+    else:
+        rnn.init(num_words, embedding_matrix)
+        r_rnn = rnn.fit(data, targets)
+        rnn.save(fname)
+        util.visualize_data(r_rnn)
 
 ## modules/connect.py
 conn.start_serve(rnn, ex.mail_callback)
