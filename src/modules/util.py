@@ -6,10 +6,19 @@ import numpy as np
 from keras.preprocessing.text import Tokenizer
 from keras_preprocessing.sequence import pad_sequences
 from sklearn.metrics import precision_recall_curve, average_precision_score
+import spacy
+
+# install English model with python as Admin -m spacy download en
+nlp = spacy.load('en')
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
 MAX_VOCABULARY = config['MAX_VOCABULARY']
+
+
+def split_sentences(text):
+    doc = nlp(text)
+    return [s for s in doc.sents]
 
 
 class Glove:
@@ -57,8 +66,9 @@ class Tokenization:
     tokenizer = None
 
     @staticmethod
-    def tokenize(texts, max_vocabulary, refit=True):
+    def tokenize(texts, max_vocabulary, word_count, refit=True):
         """
+        :param word_count: dict of word: count mappings
         :param texts:
         :param max_vocabulary:
         :return: sequences of integers corresponding to texts, word -> integer mapping
@@ -67,14 +77,27 @@ class Tokenization:
             Tokenization.tokenizer = Tokenizer(num_words=max_vocabulary)
             Tokenization.tokenizer.fit_on_texts(texts)
             sequences = Tokenization.tokenizer.texts_to_sequences(texts)
-            return sequences, Tokenization.tokenizer.word_index
+            word_index = Tokenization.remove_infrequence_words(Tokenization.tokenizer.word_index, word_count)
+            return sequences, word_index
         else:
             if refit:
                 print("Warning: Refitting the tokenizer might change your index table")
                 Tokenization.tokenizer.fit_on_texts(texts)
 
             sequences = Tokenization.tokenizer.texts_to_sequences(texts)
-            return sequences, Tokenization.tokenizer.word_index
+            word_index = Tokenization.remove_infrequence_words(Tokenization.tokenizer.word_index, word_count)
+
+            return sequences, word_index
+
+    @staticmethod
+    def remove_infrequence_words(word_index, word_count, min_freq=10):
+        count = len(word_index)
+        trimmed_word_index = {word: index for word, index in word_index.items() if
+                              word_count.get(word, min_freq) >= min_freq}
+
+        print('INFO: Removed {} infrequent words (min_freq = {})'.format(count - len(trimmed_word_index), min_freq))
+
+        return trimmed_word_index
 
 
 def visualize_data(r):
@@ -87,6 +110,9 @@ def visualize_data(r):
     # accuracy
     plt.plot(r.history['acc'], label='acc')
     plt.plot(r.history['val_acc'], label='val_acc')
+    plt.title('Max validation accuracy = {:.2f}'.format(max(r.history['val_acc'])))
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
     plt.legend()
     plt.show()
 
@@ -222,13 +248,6 @@ def preprocess_data(data, test_data=False):
             else:
                 word2count[word] += 1
 
-    ## create a words2int dictionary
-    words2int = {}
-    word_number = 0
-    for word, count in word2count.items():
-        words2int[word] = word_number
-        word_number += 1
-
     ## create an action array (yes -> 1, no -> 0)
     action_into_int = []
     if len(requires_action) > 0:
@@ -240,10 +259,10 @@ def preprocess_data(data, test_data=False):
 
     ## pass the dataset through the tokenizer
     refit = not test_data
-    sequences, word_index = Tokenization.tokenize(clean_sentences, config['MAX_VOCABULARY'], refit=refit)
+    sequences, word_index = Tokenization.tokenize(clean_sentences, config['MAX_VOCABULARY'], word2count, refit=refit)
     word2vec = Glove.get_word2vec(config['glove_path'], config['glove_dimension'])
     num_words = min(config['MAX_VOCABULARY'], len(word_index) + 1)
-    embedding_matrix = Glove.create_embedding_matrix(words2int, num_words, config['glove_dimension'], recreate=refit)
+    embedding_matrix = Glove.create_embedding_matrix(word_index, num_words, config['glove_dimension'], recreate=refit)
     data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
     targets = np.array(action_into_int)
 
