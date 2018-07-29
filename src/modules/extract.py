@@ -1,8 +1,8 @@
 import json
 import numpy as np
 
+import modules.util as util
 import modules.entities as ent
-import modules.preprocess as pp
 
 from models.task import Task
 
@@ -10,8 +10,11 @@ from dateparser.search import search_dates
 
 """ Gets called when a user receives an email -> extracts the task """
 def mail_callback(nn, sentences, content):
-    _, _, inputs, _ = pp.preprocess_data(sentences)
-    predictions = nn.predict(inputs)
+    _, _, inputs, _ = util.preprocess_data(sentences)
+    #predictions = nn.predict(inputs)
+    predictions = []
+    for input in inputs:
+        predictions.append(1)
     tasks = []
 
     for i, prediction in enumerate(predictions):

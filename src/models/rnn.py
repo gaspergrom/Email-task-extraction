@@ -48,8 +48,3 @@ class RNN:
     def predict(self, input):
         # TODO: post-processing
         return self.model.predict(input, batch_size=BATCH_SIZE)
-
-    def save(self, fname):
-        if self.model is not None:
-            print("Saving RNN model")
-            self.model.save(fname)

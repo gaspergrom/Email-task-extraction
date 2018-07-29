@@ -5,29 +5,31 @@ import asana
 import urllib
 import numpy as np
 
+from models.bot_action import BotAction
+
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
+bot_action = BotAction.IDLE
 
-def refresh_token(auth, refresh):
-    data = json.dumps({
-        "accessToken": auth,
-        "refreshToken": refresh
-    }).encode("utf-8")
+def refresh_token_func():
+    data = json.dumps({"$type": "AuthIntegration",
+                       "identificator": "loop.user8@gmail.com",
+                       "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
+                       }).encode("utf-8")
 
-    r = urllib.request.Request(base + '/api/v1/comment/chat', data)
+    r = urllib.request.Request(base + '/api/v1/auth/integration', data)
     r.add_header("Content-Type",
                  'application/json')
-    r.add_header("Authorization", "Bearer " + auth)
     res = urllib.request.urlopen(r).read()
-    authorisation = json.loads(res)["accessToken"]
-    refresh_token = json.loads(res)["refreshToken"]
+    authorisation = json.loads(res)["token"]["accessToken"]
+    refresh_token = json.loads(res)["token"]["refreshToken"]
     return authorisation, refresh_token
 
-
 def send_to_google(text):
+    #print('Sending to Google: ' + text)
     url_addr = "https://dialogflow.googleapis.com/v2/projects/chatbot-loop/agent/sessions/b684f4f1-3b5f-ad82-9e24-5186ce5a0c5e:detectIntent"
-    auth_token = "ya29.c.EloGBgAI8Jv5QPbV3idWADK7wbBlI05vcAdvXMBfSuZW_n5vZ7Tfw9o6ERLpjn-r94SRKDIhP3EvJJtLnTIIKVOc7tCN2RdYZcPSgw56Dw-u7RXDP9QYjo_EsuE"
+    auth_token = "ya29.c.EloHBv6ERVJNZXzLtv-1QPTWwBOt0IHR77tB1BkX-ZghyMFWK10Vl9T3C92mwMCxg2yW5PewDO5KHt9hKcBUBaFjDIF4rDP5kmRwgIZOmJCgYTxywdsxieMxlsM"
     data = json.dumps({
         "queryInput": {
             "text": {
@@ -46,11 +48,9 @@ def send_to_google(text):
                    'application/json')
     req.add_header("Authorization", "Bearer " + auth_token)
     response = urllib.request.urlopen(req).read()
-    print(response)
+    #print(response)
 
     return response
-
-
 
 def send_to_user(msg, auth, refresh):
     data = json.dumps({
@@ -86,7 +86,7 @@ def send_to_user(msg, auth, refresh):
     try:
         response = urllib.request.urlopen(req).read()
     except Exception:
-        auth, refresh=refresh_token(auth, refresh)
+        auth, refresh = refresh_token_func()
         req = urllib.request.Request(base + '/api/v1/comment/chat', data)
         req.add_header("Content-Type",
                        'application/json')
@@ -98,10 +98,11 @@ def send_to_user(msg, auth, refresh):
 def start_serve(nn, mail_callback):
     # request na vsake tok časa da preveri keri so kej novi emaili
     sinceId = 17933766156402694
+    bot_action = BotAction.IDLE
     asana_code = str(input("Vnesi asana code: "))
     last_tasks = []
     base = "https://clean-sprint-app.intheloop.io"
-    authorisation = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfOTBkZWFkNDQtZDRhZi0zZDY0LTY0YjgtZDY0N2M0ZTcwNDc3IiwibmJmIjoxNTMyNzY3MTc1LCJleHAiOjE1MzI3NzA3NzUsImlhdCI6MTUzMjc2NzE3NX0.VjDWYiKS3ja5dClZw6cSPYxc0RVFyDiRQzYNeGFaq78'
+    authorisation = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfNTc2Y2IzZTMtZjNlNi1lODgwLTZhODItZGY5MjEyOTcxN2IwIiwibmJmIjoxNTMyODUwMzQ3LCJleHAiOjE1MzI4NTM5NDcsImlhdCI6MTUzMjg1MDM0N30.PtXX-MJkw3e8WeG35lv2FS2akdQOh3bGhMmZoUYeRxM'
     user = 'user_507'
     refresh_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1X2lkIjoiMTEyIiwiYXRfaWQiOiIxMTJfNTk1ZDdlMmUtZDQyYy1mNjVhLThiODEtMmY0MjE2YTY4YTQ2IiwibmJmIjoxNTMyNzY2Mzk1LCJleHAiOjE1MzI3Njk5OTUsImlhdCI6MTUzMjc2NjM5NX0.cCCwviQt2KzTDDGfVML-0Ihjk4yZyBmui8YQyuNo6kI"
 
@@ -121,7 +122,7 @@ def start_serve(nn, mail_callback):
         try:
             response = urllib.request.urlopen(req).read().decode('utf8')
         except Exception:
-            authorisation, refresh_token = refresh_token(authorisation, refresh_token)
+            authorisation, refresh_token = refresh_token_func()
             req = urllib.request.Request(base + '/api/v1/event/list?' + data)
             req.add_header("Authorization", "Bearer " + authorisation)
             req.add_header("X-Impersonate-User", user)
@@ -147,14 +148,53 @@ def start_serve(nn, mail_callback):
                     for task in last_tasks:
                         comment_text += " - " + task.title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
+                    bot_action = BotAction.WAIT_QUESTION
+                    print(comment_text)
             elif (type == "CommentChat"):
                 # addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
                 user_response = response["resources"][0]["comment"]["snippet"].strip()
-                parsed = send_to_google(user_response)
-                addtask = ""
-                if (addtask == "asana"):
-                    if len(last_tasks) > 0:
-                        add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
+                #print('User response: ' + user_response + ', bot action: ' + str(bot_action.value))
+                print('Action: ' + str(bot_action.value))
+                
+                if bot_action == BotAction.WAIT_QUESTION and len(user_response) < 100: # hack
+                    action = handle_processed_response(send_to_google(user_response), last_tasks, asana_code, authorisation, refresh_token)
+
+                    if action is not None:
+                        bot_action = action
+
+def handle_processed_response(bytes, last_tasks, asana_code, authorisation, refresh_token):
+    decoded = bytes.decode('utf8')
+    deserialized = json.loads(decoded)
+
+    print('Handling processed response.')
+
+    msg = ''
+    query_result = 'queryResult'
+    action = 'action'
+    fulfillmentText = 'fulfillmentText'
+    yes = 'smalltalk.confirmation.yes'
+    no = 'smalltalk.confirmation.no'
+
+    if query_result in deserialized and action in deserialized[query_result]:
+        if deserialized[query_result][action] == yes:
+            print('User answered positive')
+            if len(last_tasks) > 0:
+                add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
+                msg = 'I have added the tasks to Asana for you.'
+                action = BotAction.IDLE
+        elif deserialized[query_result][action] == no:
+            print('User answered negative')
+            action = BotAction.IDLE
+            msg = 'Okay, I have discarded the tasks.'
+        else:
+            print('Unknown user response')
+            msg = deserialized[query_result][fulfillmentText]
+            action = BotAction.WAIT_QUESTION
+        
+        print('Sent {0} to user'.format(msg))
+        send_to_user(msg, authorisation, refresh_token)
+        return action
+    return None
 
 def add_to_asana(asana_code, last_tasks, authorisation, refresh_token):
     print("adding task to asana...")
