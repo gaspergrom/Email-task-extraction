@@ -5,6 +5,8 @@ import asana
 import urllib
 import numpy as np
 
+from models.task import Task
+
 from models.bot_action import BotAction
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -263,9 +265,7 @@ def handle_processed_prompt(client, bytes, authorisation, refresh_token):
                 msg = 'Here are your latest tasks:\n'
 
             asana_tasks = get_asana_tasks(client, num)
-            print('Asana tasks:')
-            print(asana_tasks)
-            msg += format_tasks_paginator(asana_tasks)
+            msg += format_tasks_list(asana_tasks)
         else:
             print('Unknown user prompt')
             msg = deserialized[query_result][fulfillmentText]
@@ -294,28 +294,24 @@ def add_to_asana(asana_client, last_tasks, authorisation, refresh_token):
         # authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)
 
 def get_asana_tasks(asana_client, page_size):
-    #return asana_client.tasks.find_all({'assignee': 381674085905935}, page_size = page_size)
-
-    #task_fields = ["this.workspace", "this.name", "this.created_at", "this.completed", "this.assignee_status", "this.completed_at", "this.name", "this.project"]
-    #return asana_client.tasks.find_all({"opt_fields": task_fields}, assignee = 381674085905935, workspace = 756193103565834, iterator_type='items')
-
     tasks = asana_client.get_collection("/tasks", { 'workspace': 756193103565834, 'assignee': 381674085905935 })
     tasks_list = list(tasks)
-    return tasks_list
+    tasks_list_cast = []
+    
+    for task in tasks_list:
+        tasks_list_cast.append(Task(
+            title = task['name'],
+            description = '',
+            location_list = [],
+            person_list = [],
+            datetime_list = []
+        ))
+
+    return tasks_list_cast
 
 def format_tasks_list(task_list):
     text = ""
     for task in range(len(task_list)):
         text += str(task + 1) + ". " + task_list[task].title + "\n"
-    
-    return text
-
-def format_tasks_paginator(task_paginator):
-    text = ""
-    i = 1
-    for task in task_paginator:
-        print('Adding from paginator: ' + task['Contents'])
-        text += str(i) + ". " + task['Contents']
-        i += 1
     
     return text
