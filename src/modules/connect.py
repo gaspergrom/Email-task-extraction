@@ -9,19 +9,19 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 
-def refresh_token(auth, refresh):
-    data = json.dumps({
-        "accessToken": auth,
-        "refreshToken": refresh
-    }).encode("utf-8")
 
-    r = urllib.request.Request(base + '/api/v1/comment/chat', data)
+def refresh_token_func(auth, refresh):
+    data = json.dumps({"$type": "AuthIntegration",
+                       "identificator": "loop.user8@gmail.com",
+                       "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
+                       }).encode("utf-8")
+
+    r = urllib.request.Request(base + '/api/v1/auth/integration', data)
     r.add_header("Content-Type",
                  'application/json')
-    r.add_header("Authorization", "Bearer " + auth)
     res = urllib.request.urlopen(r).read()
-    authorisation = json.loads(res)["accessToken"]
-    refresh_token = json.loads(res)["refreshToken"]
+    authorisation = json.loads(res)["token"]["accessToken"]
+    refresh_token = json.loads(res)["token"]["refreshToken"]
     return authorisation, refresh_token
 
 
@@ -49,7 +49,6 @@ def send_to_google(text):
     print(response)
 
     return response
-
 
 
 def send_to_user(msg, auth, refresh):
@@ -86,7 +85,7 @@ def send_to_user(msg, auth, refresh):
     try:
         response = urllib.request.urlopen(req).read()
     except Exception:
-        auth, refresh=refresh_token(auth, refresh)
+        auth, refresh = refresh_token_func(auth, refresh)
         req = urllib.request.Request(base + '/api/v1/comment/chat', data)
         req.add_header("Content-Type",
                        'application/json')
@@ -121,7 +120,7 @@ def start_serve(nn, mail_callback):
         try:
             response = urllib.request.urlopen(req).read().decode('utf8')
         except Exception:
-            authorisation, refresh_token = refresh_token(authorisation, refresh_token)
+            authorisation, refresh_token = refresh_token_func(authorisation, refresh_token)
             req = urllib.request.Request(base + '/api/v1/event/list?' + data)
             req.add_header("Authorization", "Bearer " + authorisation)
             req.add_header("X-Impersonate-User", user)
@@ -137,15 +136,19 @@ def start_serve(nn, mail_callback):
                 content = response["resources"][0]["comment"]["body"]["content"]
                 content = re.sub(r'\[(.*?)\]', '', content)
                 sentences = re.split('(!|\.|\?)', content)[:-1:2]
+                email = response["resources"][0]["comment"]["author"]["email"]
+                author = response["resources"][0]["comment"]["author"]["name"]
+                subject = response["resources"][0]["comment"]["name"]
                 last_tasks = mail_callback(nn, sentences, content)
                 print("Got an email")
                 if (len(last_tasks) > 0):
-                    if (len(last_tasks) > 1):
-                        comment_text = "Found " + str(len(last_tasks)) + " tasks in your latest email:\n"
+                    comment_text = "[" + author + " (" + email + ") - " + subject + "]\n"
+                    if len(last_tasks) > 1:
+                        comment_text += "Found " + str(len(last_tasks)) + " tasks in this email:\n"
                     else:
-                        comment_text = "Found 1 task in your latest email:\n"
-                    for task in last_tasks:
-                        comment_text += " - " + task.title + "\n"
+                        comment_text += "Found 1 task in this email:\n"
+                    for task in range(len(last_tasks)):
+                        comment_text += str(task + 1) + ". " + last_tasks[task].title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
             elif (type == "CommentChat"):
                 # addtask = response["resources"][0]["comment"]["snippet"].strip().split()[0]
@@ -155,6 +158,7 @@ def start_serve(nn, mail_callback):
                 if (addtask == "asana"):
                     if len(last_tasks) > 0:
                         add_to_asana(asana_code, last_tasks, authorisation, refresh_token)
+
 
 def add_to_asana(asana_code, last_tasks, authorisation, refresh_token):
     print("adding task to asana...")
