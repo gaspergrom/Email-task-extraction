@@ -1,8 +1,3 @@
-import os
-
-os.chdir(r'C:\Users\Guestorator\PycharmProjects\Email-task-extraction')  # TODO CHANGE BEFORE COMMITTING
-print(os.getcwd())
-
 import json
 
 from models.cnn import CNNKim
