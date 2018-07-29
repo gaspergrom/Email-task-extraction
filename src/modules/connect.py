@@ -155,6 +155,7 @@ def start_serve(nn, mail_callback):
                         comment_text += "Found 1 task in this email:\n"
                     
                     comment_text += format_tasks_list(last_tasks)
+                    comment_text += '\nDo you want me to add these tasks to Asana?'
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
                     bot_action = BotAction.WAIT_QUESTION
                     print(comment_text)
