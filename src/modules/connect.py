@@ -12,12 +12,22 @@ base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 bot_action = BotAction.IDLE
 
+<<<<<<< HEAD
 def refresh_token_func():
     data = json.dumps({"$type": "AuthIntegration",
                        "identificator": "loop.user8@gmail.com",
                        "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
                        }).encode("utf-8")
 
+# =======
+
+# def refresh_token_func():
+#     data = json.dumps({"$type": "AuthIntegration",
+#                        "identificator": "loop.user8@gmail.com",
+#                        "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
+#                        }).encode("utf-8")
+
+# >>>>>>> 22159d2d8014057cf9fa28b6516d04f064cfe7d4
     r = urllib.request.Request(base + '/api/v1/auth/integration', data)
     r.add_header("Content-Type",
                  'application/json')
@@ -138,15 +148,19 @@ def start_serve(nn, mail_callback):
                 content = response["resources"][0]["comment"]["body"]["content"]
                 content = re.sub(r'\[(.*?)\]', '', content)
                 sentences = re.split('(!|\.|\?)', content)[:-1:2]
+                email = response["resources"][0]["comment"]["author"]["email"]
+                author = response["resources"][0]["comment"]["author"]["name"]
+                subject = response["resources"][0]["comment"]["name"]
                 last_tasks = mail_callback(nn, sentences, content)
                 print("Got an email")
                 if (len(last_tasks) > 0):
-                    if (len(last_tasks) > 1):
-                        comment_text = "Found " + str(len(last_tasks)) + " tasks in your latest email:\n"
+                    comment_text = "[" + author + " (" + email + ") - " + subject + "]\n"
+                    if len(last_tasks) > 1:
+                        comment_text += "Found " + str(len(last_tasks)) + " tasks in this email:\n"
                     else:
-                        comment_text = "Found 1 task in your latest email:\n"
-                    for task in last_tasks:
-                        comment_text += " - " + task.title + "\n"
+                        comment_text += "Found 1 task in this email:\n"
+                    for task in range(len(last_tasks)):
+                        comment_text += str(task + 1) + ". " + last_tasks[task].title + "\n"
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
                     bot_action = BotAction.WAIT_QUESTION
                     print(comment_text)
@@ -195,6 +209,7 @@ def handle_processed_response(bytes, last_tasks, asana_code, authorisation, refr
         send_to_user(msg, authorisation, refresh_token)
         return action
     return None
+
 
 def add_to_asana(asana_code, last_tasks, authorisation, refresh_token):
     print("adding task to asana...")
