@@ -81,7 +81,7 @@ class Tokenization:
             return sequences, word_index
 
     @staticmethod
-    def remove_infrequence_words(word_index, word_count, min_freq=2):
+    def remove_infrequence_words(word_index, word_count, min_freq=10):
         count = len(word_index)
         trimmed_word_index = {word: index for word, index in word_index.items() if
                               word_count.get(word, min_freq) >= min_freq}
