@@ -222,12 +222,7 @@ def preprocess_data(data, test_data=False):
             else:
                 word2count[word] += 1
 
-    ## create a words2int dictionary
-    words2int = {}
-    word_number = 0
-    for word, count in word2count.items():
-        words2int[word] = word_number
-        word_number += 1
+    # TODO: remove infrequent words
 
     ## create an action array (yes -> 1, no -> 0)
     action_into_int = []
@@ -243,7 +238,7 @@ def preprocess_data(data, test_data=False):
     sequences, word_index = Tokenization.tokenize(clean_sentences, config['MAX_VOCABULARY'], refit=refit)
     word2vec = Glove.get_word2vec(config['glove_path'], config['glove_dimension'])
     num_words = min(config['MAX_VOCABULARY'], len(word_index) + 1)
-    embedding_matrix = Glove.create_embedding_matrix(words2int, num_words, config['glove_dimension'], recreate=refit)
+    embedding_matrix = Glove.create_embedding_matrix(word_index, num_words, config['glove_dimension'], recreate=refit)
     data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
     targets = np.array(action_into_int)
 
