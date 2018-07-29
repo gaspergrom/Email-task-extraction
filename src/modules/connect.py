@@ -31,7 +31,7 @@ def refresh_token_func():
 def send_to_google(text):
     # print('Sending to Google: ' + text)
     url_addr = "https://dialogflow.googleapis.com/v2/projects/chatbot-loop/agent/sessions/b684f4f1-3b5f-ad82-9e24-5186ce5a0c5e:detectIntent"
-    auth_token = "ya29.c.EloHBrPoKrOZNqvg7EPvZYB4d0Va9ihM1YxJMsmLVc-ywgbYazXnLRd-aKoXMsl13sHRxiqXQNU9D6DMraLNr7aJnXK0OFdReeE7zt97lL2UUvpEe0obJX6_qQw"
+    auth_token = "ya29.c.EloHBoFrgpFzK-P2OqWu-XwNDEM0sWcleKsfKoKBuc9KGG_8I0gc182j5fgx-Wa6aRJMRlHthajwUN7q-cvzjGKIvgE0N2ojMOvH6VXnguIM_Kpmi9itNluAk2A"
     data = json.dumps({
         "queryInput": {
             "text": {
@@ -223,6 +223,7 @@ def handle_processed_response(bytes, last_tasks, asana_client, authorisation, re
                         selected_tasks.append(last_tasks[i])
                         tasks_str += str(num) + ', '
                 
+                print('Added tasks: ' + tasks_str)
                 add_to_asana(asana_client, selected_tasks, authorisation, refresh_token)
                 msg = 'I have added task(s) nr. {0} to Asana for you.'.format(tasks_str[0:-2])
                 b_action = BotAction.IDLE
@@ -259,7 +260,10 @@ def handle_processed_prompt(client, bytes, authorisation, refresh_token):
             if parameters in deserialized[query_result] and number in deserialized[query_result][parameters]:
                 num = deserialized[query_result][parameters][number]
 
-                msg = 'Here are your last {0} tasks:\n'.format(num)
+                if num != '':
+                    msg = 'Here are your last {0} tasks:\n'.format(num)
+                else:
+                    msg = 'Here are your latest tasks:\n'
             # the user did not specify the number of tasks -> show all
             else:
                 msg = 'Here are your latest tasks:\n'
@@ -291,6 +295,8 @@ def add_to_asana(asana_client, last_tasks, authorisation, refresh_token):
         task_params["notes"] = task_params_notes
 
         result = asana_client.tasks.create_in_workspace(756193103565834, task_params)
+        print('Asana result:')
+        print(result)
         # authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)
 
 def get_asana_tasks(asana_client, page_size):
@@ -300,6 +306,7 @@ def get_asana_tasks(asana_client, page_size):
     
     for task in tasks_list:
         tasks_list_cast.append(Task(
+            id = task['id'],
             title = task['name'],
             description = '',
             location_list = [],
@@ -312,6 +319,11 @@ def get_asana_tasks(asana_client, page_size):
 def format_tasks_list(task_list):
     text = ""
     for task in range(len(task_list)):
-        text += str(task + 1) + ". " + task_list[task].title + "\n"
-    
+        text += '{0}. {1}'.format(str(task + 1), task_list[task].title)
+        
+        if task_list[task].id is not None:
+            text += ' (https://app.asana.com/0/{0}/{1})'.format(756193103565834, task_list[task].id)
+        
+        text += '\n'
+
     return text

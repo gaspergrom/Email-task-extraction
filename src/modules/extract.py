@@ -45,6 +45,7 @@ def mail_callback(nn, sentences, content):
                     print("Found date: " + datetime_parsed)
 
             task = Task(
+                id = None,
                 title = sentences[i],
                 description = content,
                 location_list = location_list,
