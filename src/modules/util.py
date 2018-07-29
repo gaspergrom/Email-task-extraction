@@ -6,10 +6,19 @@ import numpy as np
 from keras.preprocessing.text import Tokenizer
 from keras_preprocessing.sequence import pad_sequences
 from sklearn.metrics import precision_recall_curve, average_precision_score
+import spacy
+
+# install English model with python as Admin -m spacy download en
+nlp = spacy.load('en')
 
 config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read())
 
 MAX_VOCABULARY = config['MAX_VOCABULARY']
+
+
+def split_sentences(text):
+    doc = nlp(text)
+    return [s for s in doc.sents]
 
 
 class Glove:
