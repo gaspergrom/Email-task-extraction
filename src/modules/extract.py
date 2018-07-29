@@ -10,15 +10,22 @@ from dateparser.search import search_dates
 
 """ Gets called when a user receives an email -> extracts the task """
 def mail_callback(nn, sentences, content):
-    _, _, inputs, _ = util.preprocess_data(sentences)
-    #predictions = nn.predict(inputs)
-    predictions = []
-    for input in inputs:
-        predictions.append(1)
+    """
+
+    :param nn:
+    :param sentences: list of strings
+    :param content:
+    :return:
+    """
+    sequences = util.preprocess_new_sentences(sentences)
+    predictions = nn.predict(sequences)
+    threshold = 0.5
+    predictions = [p >= threshold for p in predictions]
+
     tasks = []
 
-    for i, prediction in enumerate(predictions):
-        # if prediction == 1:
+    for i, is_task in enumerate(predictions):
+        if is_task:
             print("Got a task") # TODO: CHECK IF TASK!!
             entities = ent.get_entities(sentences[i])
 
