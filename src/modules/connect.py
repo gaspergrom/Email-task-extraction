@@ -12,7 +12,6 @@ base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 bot_action = BotAction.IDLE
 
-
 def refresh_token_func():
     data = json.dumps({"$type": "AuthIntegration",
                        "identificator": "loop.user8@gmail.com",
@@ -27,11 +26,10 @@ def refresh_token_func():
     refresh_token = json.loads(res)["token"]["refreshToken"]
     return authorisation, refresh_token
 
-
 def send_to_google(text):
     # print('Sending to Google: ' + text)
     url_addr = "https://dialogflow.googleapis.com/v2/projects/chatbot-loop/agent/sessions/b684f4f1-3b5f-ad82-9e24-5186ce5a0c5e:detectIntent"
-    auth_token = "ya29.c.EloHBv6ERVJNZXzLtv-1QPTWwBOt0IHR77tB1BkX-ZghyMFWK10Vl9T3C92mwMCxg2yW5PewDO5KHt9hKcBUBaFjDIF4rDP5kmRwgIZOmJCgYTxywdsxieMxlsM"
+    auth_token = "ya29.c.EloHBgHl16PYgUz-MHlvIZ_v1h3o6xJqCuEY1mjJ0XWilb4WMEd47XT1uUatkA7LIiu6wOA8NtSv1tH2pMufSu4wFI_lxUh3KUsLr9UYSTE_8QSAjWa9rnfrJuU"
     data = json.dumps({
         "queryInput": {
             "text": {
@@ -53,7 +51,6 @@ def send_to_google(text):
     # print(response)
 
     return response
-
 
 def send_to_user(msg, auth, refresh):
     data = json.dumps({
@@ -96,7 +93,6 @@ def send_to_user(msg, auth, refresh):
         req.add_header("Authorization", "Bearer " + auth)
         response = urllib.request.urlopen(req).read()
     return auth, refresh
-
 
 def start_serve(nn, mail_callback):
     # request na vsake tok časa da preveri keri so kej novi emaili
@@ -157,8 +153,8 @@ def start_serve(nn, mail_callback):
                         comment_text += "Found " + str(len(last_tasks)) + " tasks in this email:\n"
                     else:
                         comment_text += "Found 1 task in this email:\n"
-                    for task in range(len(last_tasks)):
-                        comment_text += str(task + 1) + ". " + last_tasks[task].title + "\n"
+                    
+                    comment_text += format_tasks_list(last_tasks)
                     authorisation, refresh_token = send_to_user(comment_text, authorisation, refresh_token)
                     bot_action = BotAction.WAIT_QUESTION
                     print(comment_text)
@@ -169,13 +165,19 @@ def start_serve(nn, mail_callback):
                 print('Action: ' + str(bot_action.value))
 
                 # prevent the bot to process longer texts
-                if bot_action == BotAction.WAIT_QUESTION and len(user_response) < 100:
-                    action = handle_processed_response(send_to_google(user_response), last_tasks, client, authorisation,
-                                                       refresh_token)
+                if len(user_response) < 100:
+                    action = None
+                    # the user answered a question
+                    if bot_action == BotAction.WAIT_QUESTION:
+                        action = handle_processed_response(send_to_google(user_response), last_tasks, client, authorisation, refresh_token)
 
+                    # # the user sent a prompt to the bot
+                    # if bot_action == BotAction.IDLE:
+                    #     action = handle_processed_prompt(client, send_to_google(user_response), authorisation, refresh_token)
+
+                    # set bot action
                     if action is not None:
                         bot_action = action
-
 
 def handle_processed_response(bytes, last_tasks, asana_client, authorisation, refresh_token):
     decoded = bytes.decode('utf8')
@@ -196,21 +198,59 @@ def handle_processed_response(bytes, last_tasks, asana_client, authorisation, re
             if len(last_tasks) > 0:
                 add_to_asana(asana_client, last_tasks, authorisation, refresh_token)
                 msg = 'I have added the tasks to Asana for you.'
-                action = BotAction.IDLE
+                b_action = BotAction.IDLE
         elif deserialized[query_result][action] == no:
             print('User answered negative')
-            action = BotAction.IDLE
+            b_action = BotAction.IDLE
             msg = 'Okay, I have discarded the tasks.'
         else:
             print('Unknown user response')
             msg = deserialized[query_result][fulfillmentText]
-            action = BotAction.WAIT_QUESTION
+            b_action = BotAction.WAIT_QUESTION
 
         print('Sent {0} to user'.format(msg))
         send_to_user(msg, authorisation, refresh_token)
-        return action
+        return b_action
     return None
 
+def handle_processed_prompt(client, bytes, authorisation, refresh_token):
+    decoded = bytes.decode('utf8')
+    deserialized = json.loads(decoded)
+
+    print('Handling processed prompt.')
+
+    msg = ''
+    query_result = 'queryResult'
+    action = 'action'
+    parameters = 'parameters'
+    number = 'number'
+    fulfillmentText = 'fulfillmentText'
+    show_tasks = 'task.type'
+
+    if query_result in deserialized and action in deserialized[query_result]:
+        if deserialized[query_result][action] == show_tasks:
+            # the user specified the number of tasks
+            num = 99999
+            if parameters in deserialized[query_result] and number in deserialized[query_result][parameters]:
+                num = deserialized[query_result][parameters][number]
+
+                msg = 'Here are your last {0} tasks:\n'.format(num)
+            # the user did not specify the number of tasks -> show all
+            else:
+                msg = 'Here are your latest tasks:\n'
+
+            asana_tasks = get_asana_tasks(client, num)
+            msg += format_tasks_paginator(asana_tasks)
+            b_action = BotAction.IDLE
+        else:
+            print('Unknown user prompt')
+            msg = deserialized[query_result][fulfillmentText]
+            b_action = BotAction.IDLE
+
+        print('Sent {0} to user'.format(msg))
+        send_to_user(msg, authorisation, refresh_token)
+        return b_action
+    return None
 
 def add_to_asana(asana_client, last_tasks, authorisation, refresh_token):
     print("adding task to asana...")
@@ -232,6 +272,22 @@ def add_to_asana(asana_client, last_tasks, authorisation, refresh_token):
         result = asana_client.tasks.create_in_workspace(756193103565834, task_params)
         authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)
 
-
 def get_asana_tasks(asana_client, page_size):
-    return asana_client.tasks.find_all({'assignee': 381674085905935}, page_size=page_size)
+    return asana_client.tasks.find_all({'assignee': 381674085905935}, page_size = page_size)
+
+def format_tasks_list(task_list):
+    text = ""
+    for task in range(len(task_list)):
+        text += str(task + 1) + ". " + task_list[task].title + "\n"
+    
+    return text
+
+def format_tasks_paginator(task_paginator):
+    text = ""
+    i = 1
+    for task in task_paginator:
+        print('Adding from paginator: ' + task['Contents'])
+        text += str(i) + ". " + task['Contents']
+        i += 1
+    
+    return text
