@@ -12,22 +12,12 @@ base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 bot_action = BotAction.IDLE
 
-<<<<<<< HEAD
 def refresh_token_func():
     data = json.dumps({"$type": "AuthIntegration",
                        "identificator": "loop.user8@gmail.com",
                        "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
                        }).encode("utf-8")
-
-# =======
-
-# def refresh_token_func():
-#     data = json.dumps({"$type": "AuthIntegration",
-#                        "identificator": "loop.user8@gmail.com",
-#                        "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
-#                        }).encode("utf-8")
-
-# >>>>>>> 22159d2d8014057cf9fa28b6516d04f064cfe7d4
+    
     r = urllib.request.Request(base + '/api/v1/auth/integration', data)
     r.add_header("Content-Type",
                  'application/json')
@@ -170,7 +160,8 @@ def start_serve(nn, mail_callback):
                 #print('User response: ' + user_response + ', bot action: ' + str(bot_action.value))
                 print('Action: ' + str(bot_action.value))
                 
-                if bot_action == BotAction.WAIT_QUESTION and len(user_response) < 100: # hack
+                # prevent the bot to process longer texts
+                if bot_action == BotAction.WAIT_QUESTION and len(user_response) < 100:
                     action = handle_processed_response(send_to_google(user_response), last_tasks, asana_code, authorisation, refresh_token)
 
                     if action is not None:
