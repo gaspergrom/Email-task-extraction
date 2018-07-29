@@ -101,6 +101,9 @@ def visualize_data(r):
     # accuracy
     plt.plot(r.history['acc'], label='acc')
     plt.plot(r.history['val_acc'], label='val_acc')
+    plt.title('Max validation accuracy = {:.2f}'.format(max(r.history['val_acc'])))
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
     plt.legend()
     plt.show()
 
@@ -235,8 +238,6 @@ def preprocess_data(data, test_data=False):
                 word2count[word] = 1
             else:
                 word2count[word] += 1
-
-    # TODO: remove infrequent words
 
     ## create an action array (yes -> 1, no -> 0)
     action_into_int = []
