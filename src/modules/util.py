@@ -87,6 +87,13 @@ class Tokenization:
             return sequences, word_index
 
     @staticmethod
+    def tokenize_new(texts):
+        if not Tokenization.tokenizer:
+            raise Exception("Attempting to tokenize on not yet fitted tokenizer")
+
+        return Tokenization.tokenizer.texts_to_sequences(texts)
+
+    @staticmethod
     def remove_infrequence_words(word_index, word_count, min_freq=10):
         count = len(word_index)
         trimmed_word_index = {word: index for word, index in word_index.items() if
@@ -211,6 +218,23 @@ def clean_text(text):
     text = re.sub('\s+', ' ', text)
     text = text.strip()
     return text
+
+
+def preprocess_new_sentences(sentences):
+    """
+
+    :param sentences: list of strings
+    :return: padded sequences of ints
+    """
+    clean_sentences = []
+    for sentence in sentences:
+        clean_sentences.append(clean_text(sentence))
+
+    sequences = Tokenization.tokenize_new(clean_sentences)
+    data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
+
+    return data
+
 
 def preprocess_data(data, test_data=False):
     ## split dataset sentences into two arrays (inputs & outputs)
