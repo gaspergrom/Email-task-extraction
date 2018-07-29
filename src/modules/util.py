@@ -15,11 +15,9 @@ config = json.loads(open('config.json', encoding='utf-8', errors='ignore').read(
 
 MAX_VOCABULARY = config['MAX_VOCABULARY']
 
-
 def split_sentences(text):
     doc = nlp(text)
     return [s for s in doc.sents]
-
 
 class Glove:
     word2vec = None
@@ -61,7 +59,6 @@ class Glove:
         Glove.embedding_matrix_loaded = True
         return Glove.embedding_matrix
 
-
 class Tokenization:
     tokenizer = None
 
@@ -99,7 +96,6 @@ class Tokenization:
 
         return trimmed_word_index
 
-
 def visualize_data(r):
     # visualise
     plt.plot(r.history['loss'], label='loss')
@@ -116,7 +112,6 @@ def visualize_data(r):
     plt.legend()
     plt.show()
 
-
 def precision_recall_plot(targets, predictions):
     prec, recall, _ = precision_recall_curve(targets, predictions)
 
@@ -131,7 +126,6 @@ def precision_recall_plot(targets, predictions):
         average_precision))
     plt.show()
 
-
 def apply_threshold(predictions, targets, threshold):
     error_sum = 0
 
@@ -144,7 +138,6 @@ def apply_threshold(predictions, targets, threshold):
         error_sum += abs(prediction[0] - targets[i])
 
     print("Error with threshold {0}: {1}".format(threshold, error_sum / len(targets)))
-
 
 def clean_text(text):
     text = text.lower()
@@ -218,7 +211,6 @@ def clean_text(text):
     text = re.sub('\s+', ' ', text)
     text = text.strip()
     return text
-
 
 def preprocess_data(data, test_data=False):
     ## split dataset sentences into two arrays (inputs & outputs)
