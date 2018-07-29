@@ -10,7 +10,7 @@ base = "https://clean-sprint-app.intheloop.io"
 user = 'user_507'
 
 
-def refresh_token_func(auth, refresh):
+def refresh_token_func():
     data = json.dumps({"$type": "AuthIntegration",
                        "identificator": "loop.user8@gmail.com",
                        "secret": "LYiAfAXoCRFxtlCmeIc5ZGLcrIOxR6yPMAlM0ZY/fR97m9qWjsrqCThE0kfAPd3pUck="
@@ -85,7 +85,7 @@ def send_to_user(msg, auth, refresh):
     try:
         response = urllib.request.urlopen(req).read()
     except Exception:
-        auth, refresh = refresh_token_func(auth, refresh)
+        auth, refresh = refresh_token_func()
         req = urllib.request.Request(base + '/api/v1/comment/chat', data)
         req.add_header("Content-Type",
                        'application/json')
@@ -120,7 +120,7 @@ def start_serve(nn, mail_callback):
         try:
             response = urllib.request.urlopen(req).read().decode('utf8')
         except Exception:
-            authorisation, refresh_token = refresh_token_func(authorisation, refresh_token)
+            authorisation, refresh_token = refresh_token_func()
             req = urllib.request.Request(base + '/api/v1/event/list?' + data)
             req.add_header("Authorization", "Bearer " + authorisation)
             req.add_header("X-Impersonate-User", user)
