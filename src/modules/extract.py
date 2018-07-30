@@ -19,14 +19,14 @@ def mail_callback(nn, sentences, content):
     """
     sequences = util.preprocess_new_sentences(sentences)
     predictions = nn.predict(sequences)
-    threshold = 0.5
+    threshold = 0.4 # test by changing this parameter
     predictions = [p >= threshold for p in predictions]
 
     tasks = []
 
     for i, is_task in enumerate(predictions):
         if is_task:
-            print("Got a task") # TODO: CHECK IF TASK!!
+            print("Got a task")
             entities = ent.get_entities(sentences[i])
 
             location_list = []

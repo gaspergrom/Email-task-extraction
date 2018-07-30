@@ -219,7 +219,6 @@ def clean_text(text):
     text = text.strip()
     return text
 
-
 def preprocess_new_sentences(sentences):
     """
 
@@ -234,7 +233,6 @@ def preprocess_new_sentences(sentences):
     data = pad_sequences(sequences, maxlen=config['MAX_SEQUENCE_LENGTH'])
 
     return data
-
 
 def preprocess_data(data, test_data=False):
     ## split dataset sentences into two arrays (inputs & outputs)

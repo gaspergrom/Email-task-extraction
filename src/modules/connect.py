@@ -31,7 +31,7 @@ def refresh_token_func():
 def send_to_google(text):
     # print('Sending to Google: ' + text)
     url_addr = "https://dialogflow.googleapis.com/v2/projects/chatbot-loop/agent/sessions/b684f4f1-3b5f-ad82-9e24-5186ce5a0c5e:detectIntent"
-    auth_token = "ya29.c.EloHBoFrgpFzK-P2OqWu-XwNDEM0sWcleKsfKoKBuc9KGG_8I0gc182j5fgx-Wa6aRJMRlHthajwUN7q-cvzjGKIvgE0N2ojMOvH6VXnguIM_Kpmi9itNluAk2A"
+    auth_token = "ya29.c.EloIBqBRyxGX68BUdtmxmWbpj4MIpMKfg1hdwB7kvWPjDuTzT_7QlCsN3SZXInkhrZsR6Tlj4pE_R1Jyya8DdNOjwrCVDX6nPOfCKY3oP93rjBd04U2bl54UXR0"
     data = json.dumps({
         "queryInput": {
             "text": {
@@ -98,7 +98,7 @@ def send_to_user(msg, auth, refresh):
 
 def start_serve(nn, mail_callback):
     # request na vsake tok časa da preveri keri so kej novi emaili
-    sinceId = 18103081825590183
+    sinceId = 18190314233426052
     bot_action = BotAction.IDLE
     asana_code = str(input("Vnesi asana code: "))
     last_tasks = []
@@ -166,7 +166,6 @@ def start_serve(nn, mail_callback):
                 user_id = response["resources"][0]["comment"]["author"]["id"]
                 print('User id: ' + user_id)
 
-                #if len(user_response) < 100:
                 # check if the new text is not by the bot (to prevent the bot from talking with itself)
                 if user_id != 'user_112':
                     action = None
@@ -249,6 +248,7 @@ def handle_processed_prompt(client, bytes, authorisation, refresh_token):
     number = 'number'
     fulfillmentText = 'fulfillmentText'
     show_tasks = 'task.type'
+    mark_done = 'task.markDone'
 
     if query_result in deserialized and query_text in deserialized[query_result]:
         print('Handling processed prompt: ' + deserialized[query_result][query_text])
@@ -269,7 +269,37 @@ def handle_processed_prompt(client, bytes, authorisation, refresh_token):
                 msg = 'Here are your latest tasks:\n'
 
             asana_tasks = get_asana_tasks(client, num)
-            msg += format_tasks_list(asana_tasks)
+
+            if len(asana_tasks) > 0:
+                msg += format_tasks_list(asana_tasks)
+            else:
+                msg = 'You have no tasks to do. Good job!'
+        elif deserialized[query_result][action] == mark_done:
+            # mark task as done
+            if parameters in deserialized[query_result] and number in deserialized[query_result][parameters]:
+                num = deserialized[query_result][parameters][number]
+
+                if num != '':
+                    print('Closing task nr. ' + str(num))
+                    result = close_asana_task(client, num)
+
+                    if result == True:
+                        msg = 'I closed task nr. {0} for you.\n'.format(str(num))
+                        asana_tasks = get_asana_tasks(client, num)
+
+                        if len(asana_tasks) > 0:
+                            msg += 'Here is the list of your remaining tasks:\n'
+                            msg += format_tasks_list(asana_tasks)
+                        else:
+                            msg += 'You have no more tasks to do. Good job!'
+                    else:
+                        msg = 'I had problems closing task nr. {0} for you.'.format(str(num))
+                else:
+                    print('Unknown user task to close.')
+                    msg = 'I did not quite understand what task you want me to close. Can you be more specific?'
+            else:
+                print('Unknown user task to close.')
+                msg = 'I did not quite understand what task you want me to close. Can you be more specific?'
         else:
             print('Unknown user prompt')
             msg = deserialized[query_result][fulfillmentText]
@@ -298,6 +328,20 @@ def add_to_asana(asana_client, last_tasks, authorisation, refresh_token):
         print('Asana result:')
         print(result)
         # authorisation, refresh_token = send_to_user("Tasks added successfully!", authorisation, refresh_token)
+
+def close_asana_task(client, num):
+    tasks = get_asana_tasks(client, 9999)
+    print('Got tasks: \n', tasks)
+
+    i = num - 1
+    if len(tasks) > i and tasks[i].id is not None:
+        path = "/tasks/%s" % (str(tasks[i].id))
+        client.delete(path, { 'workspace': 756193103565834 })
+        print('Successfully deleted task with id: ' + str(tasks[i].id))
+        return True
+    else:
+        print('Problem closing task.')
+        return False
 
 def get_asana_tasks(asana_client, page_size):
     tasks = asana_client.get_collection("/tasks", { 'workspace': 756193103565834, 'assignee': 381674085905935 })

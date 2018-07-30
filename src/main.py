@@ -5,7 +5,7 @@ from keras.models import load_model
 
 import modules.connect as conn
 import modules.extract as ex
-from modules.util import preprocess_data, visualize_data
+from modules.util import preprocess_data, preprocess_new_sentences, visualize_data
 from models.cnn import CNNKim
 
 ## Loading config & datasets
